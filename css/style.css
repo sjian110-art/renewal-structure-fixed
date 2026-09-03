@@ -1,0 +1,230 @@
+/* 1920 × 1024 reference coordinates. No !important animation overrides. */
+*{box-sizing:border-box}html,body{margin:0;padding:0}html{scroll-behavior:auto}body{font-family:'Noto Sans KR',sans-serif;color:#111;background:white;overflow-x:hidden}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}a{color:inherit}button:focus-visible,a:focus-visible{outline:2px solid #6c63ff;outline-offset:5px}body{--ui:#111}body.theme-dark{--ui:white}.header{position:fixed;inset:0 0 auto;height:calc(130px * var(--s,1));z-index:100;color:var(--ui)}.header-container{height:100%;display:flex;align-items:center;padding:0 calc(72px * var(--s,1)) 0 calc(34px * var(--s,1));gap:30px}.logo{margin:0}.logo a{display:block}.logo-img{display:block;width:calc(241px * var(--s,1));height:auto}.logo-dark,.icon-dark{display:none}.theme-dark .logo-light,.theme-dark .icon-light{display:none}.theme-dark .logo-dark,.theme-dark .icon-dark{display:block}.gnb{margin-left:auto}.gnb-list{display:flex;list-style:none;gap:calc(70px * var(--s,1));padding:0;margin:0}.gnb a{text-decoration:none;font-size:calc(19px * var(--s,1));font-weight:700;white-space:nowrap}.gnb a:hover{color:#6c63ff}.header-right{display:flex;align-items:center;gap:calc(20px * var(--s,1));margin-left:calc(100px * var(--s,1))}.header-right button{border:0;background:none;padding:0}.lang-btn img{width:calc(72px * var(--s,1));height:auto}.hamburger-btn img{width:calc(34px * var(--s,1));height:auto}.shortcut-bar{position:fixed;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:flex-end;flex-direction:column;gap:calc(8px * var(--s,1));z-index:100}.shortcut-tab-widget,.shortcut-sns-widget{position:relative}.shortcut-bar img{display:block;height:auto}.shortcut-tab-widget img{width:calc(57px * var(--s,1))}.shortcut-sns-widget img{width:calc(38px * var(--s,1))}.tab-links{position:absolute;inset:0;display:grid;grid-template-rows:repeat(4,1fr)}.tab-links a,.tab-links button{display:block;background:none;border:0;padding:0}.scroll-indicator{position:fixed;bottom:calc(25px * var(--s,1));left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;flex-direction:column;gap:8px;pointer-events:none;color:var(--ui)}.scroll-text{font-size:calc(20px * var(--s,1));white-space:nowrap}.scroll-arrow{width:calc(22px * var(--s,1));height:auto}.theme-dark .scroll-arrow{filter:invert(1)}.blur-element{transition:filter .35s .1s}.blur-element.is-blurred{filter:blur(3px)}
+#hero-pin-section{position:relative;height:calc(100vh + 20000px)}.hero-pin-container{position:sticky;top:0;height:100vh;width:100%;overflow:hidden}#bg-layer{position:absolute;inset:0;background:white}canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#atom-canvas{z-index:2}#video-stage{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;display:flex;align-items:center;justify-content:center}#video-stage video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none}.reference-stage{position:absolute;width:1920px;height:1024px;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--s,1));transform-origin:center;z-index:5}#atom-fallback{position:absolute;left:50%;top:50%;width:calc(110px * var(--s,1));transform:translate(-50%,-50%)}.atom-text-box{position:absolute;left:94px;top:358px;pointer-events:none}.atom-text-box p{font-size:22px;line-height:28px;margin:0 0 18px;font-weight:400}.atom-text-box h1{font-size:48px;line-height:70px;font-weight:300;letter-spacing:0;margin:0}#left-dial{position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none}#left-dial svg{width:100%;height:100%;overflow:hidden}.dial-number{font-family:'Outfit',sans-serif;font-size:88px;font-weight:200;fill:#fff}#dial-text-box{position:absolute;left:248px;top:454px;opacity:0;visibility:hidden;color:white}#dial-category{font-size:20px;font-weight:300}#dial-title{font-size:26px;font-weight:400;line-height:1.4;margin:9px 0 6px}#dial-detail-btn{display:block;background:none;border:0;padding:0;color:white;font-size:13px;text-decoration:underline;text-underline-offset:4px}#story-ending{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:white;text-align:center;opacity:0;visibility:hidden;font-size:24px;line-height:1.7;font-weight:300;white-space:nowrap}#story-ending span{font-size:16px;display:block;margin-top:32px}
+#circular-menu-section{position:relative;height:200vh;background:white}.menu-pin{position:sticky;top:0;height:100vh;overflow:hidden}#circular-stage{pointer-events:none}#main-circles-container,#small-circles-container{position:absolute;inset:0;pointer-events:none}.circle-position{position:absolute;transform:translate(-50%,-50%);pointer-events:none}.circle-exit{width:100%;height:100%;pointer-events:none}.menu-circle{position:relative;width:100%;height:100%;border-radius:50%;background:#e9e9e9;box-shadow:0 10px 30px #0004;pointer-events:auto;transition:width .55s cubic-bezier(.2,.75,.25,1),height .55s cubic-bezier(.2,.75,.25,1),transform .55s cubic-bezier(.2,.75,.25,1),background-color .35s,box-shadow .55s,filter .35s .12s;transform:translate(var(--push-x,0px),var(--push-y,0px));color:#333}.circle-select{position:absolute;inset:0;border:0;border-radius:50%;background:none;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;color:inherit;font-weight:400;cursor:pointer}.circle-title{font-size:var(--title-size,22px);font-weight:400;line-height:1.5}.circle-desc{font-size:var(--desc-size,17px);white-space:nowrap;max-height:0;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s,max-height .3s;margin-top:0}.menu-circle.is-hovered,.menu-circle.is-selected{background:var(--hover);color:var(--ink)}.is-hovered .circle-desc,.is-selected .circle-desc{opacity:1;max-height:36px;margin-top:8px;transform:none}.menu-circle.is-selected{box-shadow:0 20px 30px 10px #0008}.is-selected .circle-select{padding-bottom:55px}.is-selected .circle-title{font-size:28px}.is-selected .circle-desc{font-size:24px}.circle-detail-btn{position:absolute;left:50%;top:67%;transform:translateX(-50%);font-size:17px;white-space:nowrap;color:inherit;background:none;border:0;text-decoration:underline;text-underline-offset:7px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s .15s}.is-selected .circle-detail-btn{opacity:1;visibility:visible;pointer-events:auto}.menu-circle.is-blurred{filter:blur(3px)}.small-position{position:absolute;width:27px;height:27px;transform:translate(-50%,-50%);pointer-events:none}.small-push{width:100%;height:100%;transition:transform .55s,filter .35s .12s;transform:translate(var(--push-x,0px),var(--push-y,0px))}.small-dot{width:27px;height:27px;border-radius:50%;background:#e9e9e9;animation:float var(--duration,6s) ease-in-out var(--delay,0s) infinite alternate}.small-push.is-blurred{filter:blur(3px)}@keyframes float{from{transform:translate(0,0)}to{transform:translate(var(--dx,10px),var(--dy,-12px))}}#next-section{min-height:100vh;background:#fff}#toast-modal{position:fixed;bottom:35px;left:50%;transform:translate(-50%,20px);background:#222;color:white;padding:14px 24px;border-radius:8px;opacity:0;pointer-events:none;z-index:500;transition:opacity .2s,transform .2s}#toast-modal.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:800px){.gnb{display:none}.header-right{margin-left:auto}.header{height:70px}.logo-img{width:170px}.header-container{padding:0 18px}.lang-btn img{width:55px}.hamburger-btn img{width:28px}.scroll-text{font-size:12px}.shortcut-tab-widget img{width:40px}.shortcut-sns-widget img{width:27px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* Animated circles must never become browser scroll anchors. */
+html,body,#circular-menu-section,.menu-pin,.circle-position{overflow-anchor:none}
+
+#video-load-status:not([hidden]){position:fixed;bottom:20px;left:20px;right:20px;z-index:9999;background:#fff;color:#a11;padding:16px;border:1px solid #a11;font-size:14px;overflow-wrap:anywhere}
+
+/* ── Card Flip 3D Grid Section ───────────────────────────────────── */
+#card-flip-section {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+}
+
+.card-flip-sticky-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: calc(100px * var(--s, 1)) calc(60px * var(--s, 1)) calc(40px * var(--s, 1)) calc(60px * var(--s, 1));
+}
+
+.card-flip-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+  max-height: 860px;
+  min-height: 520px;
+  --grid-gap: 16px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: var(--grid-gap);
+  flex: 1;
+  width: 100%;
+  perspective: 1200px;
+}
+
+.flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.flip-card-front {
+  background: #ffffff;
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+.flip-card-back {
+  background: #f4f5f7;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.card-back-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.card-back-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #0055a5;
+  opacity: 0.85;
+}
+
+/* Photo Slice Container */
+.card-photo-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.card-photo-img {
+  position: absolute;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  width: calc(300% + (var(--grid-gap) * 2));
+  height: calc(200% + var(--grid-gap));
+  display: block;
+}
+
+/* Position classes for 3x2 slices */
+.slice-col-0 { left: 0%; }
+.slice-col-1 { left: calc(-100% - var(--grid-gap)); }
+.slice-col-2 { left: calc(-200% - (var(--grid-gap) * 2)); }
+
+.slice-row-0 { top: 0%; }
+.slice-row-1 { top: calc(-100% - var(--grid-gap)); }
+
+/* Text Card Content */
+.card-text-content {
+  width: 100%;
+  height: 100%;
+  padding: clamp(24px, 2.5vw, 44px) clamp(20px, 2.2vw, 40px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.card-title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: clamp(20px, 1.8vw, 30px);
+  font-weight: 700;
+  line-height: 1.4;
+  color: #111111;
+  margin: 0;
+  word-break: keep-all;
+  letter-spacing: -0.5px;
+}
+
+.card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  padding: 10px 24px;
+  border: 1px solid #111111;
+  background: transparent;
+  color: #111111;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  margin-top: 16px;
+}
+
+.card-btn .btn-arrow {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.card-btn:hover {
+  background: #111111;
+  color: #ffffff;
+}
+
+.card-btn:hover .btn-arrow {
+  transform: translateX(3px);
+}
+
+/* Bottom Bar */
+.card-flip-bottom-bar {
+  margin-top: 24px;
+  width: 100%;
+}
+
+.card-flip-line {
+  height: 1px;
+  background: #111111;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.card-flip-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #111111;
+  transition: opacity 0.3s ease;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .card-flip-sticky-wrapper {
+    padding: 80px 20px 20px 20px;
+  }
+  .card-flip-container {
+    --grid-gap: 10px;
+  }
+  .card-title {
+    font-size: 18px;
+  }
+  .card-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+

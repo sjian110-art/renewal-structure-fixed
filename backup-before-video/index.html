@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>한국원자력연구원 | KAERI Digital Exhibition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Outfit:wght@200;300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/menu-data.js" defer></script><script src="js/energy-renderer.js" defer></script><script src="js/atom-renderer.js" defer></script><script src="js/story-geometry.js" defer></script><script src="js/story-renderer.js" defer></script><script src="js/script.js" defer></script>
+</head><body class="theme-light" id="home">
+    <!-- Fixed Header Navigation -->
+    <header id="header" class="header blur-element">
+        <div class="header-container">
+            <h1 class="logo">
+                <a href="#home" aria-label="한국원자력연구원 홈">
+                    <img src="assets/logo-on-light.png" alt="한국원자력연구원 Logo" class="logo-img logo-light">
+                    <img src="assets/logo-on-dark.png" alt="한국원자력연구원 Logo Dark" class="logo-img logo-dark">
+                </a>
+            </h1>
+
+            <nav class="gnb" aria-label="주요 메뉴">
+                <ul class="gnb-list">
+                    <li><a href="#info">정보공개</a></li>
+                    <li><a href="#rnd">연구개발</a></li>
+                    <li><a href="#safety">안전정보</a></li>
+                    <li><a href="#community">소통마당</a></li>
+                    <li><a href="#customer">고객참여</a></li>
+                    <li><a href="#intro">KAERI 소개</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-right">
+                <button type="button" class="lang-btn" aria-label="언어 선택 (ENG)">
+                    <img src="assets/icon-globe-light.png" alt="ENG" class="icon-light">
+                    <img src="assets/icon-globe-dark.png" alt="ENG" class="icon-dark">
+                </button>
+                <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="전체 메뉴 열기">
+                    <img src="assets/icon-menu-light.png" alt="Menu" class="icon-light">
+                    <img src="assets/icon-menu-dark.png" alt="Menu" class="icon-dark">
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <aside class="shortcut-bar blur-element" aria-label="빠른 바로가기">
+      <div class="shortcut-tab-widget"><img src="assets/icon-screen-tab-light.png" alt="" width="57" height="148"><div class="tab-links">
+        <a href="#home" aria-label="첫 화면"></a><a href="#menu-rnd" aria-label="연구개발"></a><a href="#menu-safety" aria-label="안전정보"></a><a href="#menu-customer" aria-label="고객참여"></a>
+      </div></div>
+      <div class="shortcut-sns-widget"><img src="assets/icon-sns-tab-light.png" alt="" width="38" height="92"><div class="tab-links">
+        <button aria-label="블로그"></button><button aria-label="페이스북"></button><button aria-label="인스타그램"></button><button aria-label="유튜브"></button>
+      </div></div>
+    </aside>
+    <!-- Scroll Down Indicator (hero-main.png Specification) -->
+    <div class="scroll-indicator blur-element" id="scroll-indicator">
+        <span class="scroll-text">스크롤하여 원자의 흐름을 따라가세요.</span>
+        <img src="assets/icon-arrow-down-light.png" alt="Down" class="scroll-arrow icon-light">
+        <img src="assets/icon-arrow-down-light.png" alt="Down Dark" class="scroll-arrow icon-dark">
+    </div>
+
+
+<main>
+<section id="hero-pin-section" aria-label="원자에서 시작되는 대한민국의 미래">
+ <div class="hero-pin-container">
+  <div id="bg-layer"></div>
+  <canvas id="energy-canvas" aria-hidden="true"></canvas>
+  <canvas id="atom-canvas" aria-hidden="true"></canvas>
+  <img id="atom-fallback" src="assets/atom-01-core.png" alt="원자 중심">
+  <div class="reference-stage">
+   <div class="atom-text-box" id="atom-text"><p>KAERI<br>미래를 설계하는 원자력 연구</p><h1>원자에서 시작되는<br>대한민국의 미래</h1></div>
+   <div id="left-dial" aria-hidden="true"><svg viewBox="0 0 1920 1024"><circle cx="-570" cy="512" r="676" fill="none" stroke="#777" stroke-width="1.2"/><g id="dial-numbers"></g></svg></div>
+   <div id="dial-text-box" inert><span id="dial-category"></span><h2 id="dial-title"></h2><button id="dial-detail-btn">자세히 보기 →</button></div>
+   <div id="story-ending"><p>보이지 않는 원자에서 시작된<br>에너지가 우리의 일상을 움직입니다.</p><span>KAERI<br>한국원자력연구원</span></div>
+  </div>
+ </div>
+</section>
+<section id="circular-menu-section" aria-label="주요 서비스 메뉴">
+ <div class="menu-pin"><div id="circular-stage" class="reference-stage"><div id="main-circles-container"></div><div id="small-circles-container" aria-hidden="true"></div></div></div>
+</section>
+<section id="next-section" aria-label="다음 섹션"><!-- 다음 섹션 콘텐츠는 사용자 시안 확정 후 삽입 --></section>
+</main>
+<div id="toast-modal" role="status" aria-live="polite"></div>
+<noscript>원자 전시와 메뉴를 보려면 JavaScript를 활성화해 주세요.</noscript>
+</body></html>

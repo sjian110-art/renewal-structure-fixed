@@ -1,0 +1,227 @@
+/* A single, reversible scene position drives background, artwork and dial.
+   Video-scrubbed version: replaces Canvas-drawn story with MP4 scroll scrubbing.
+   Atom renderer (white background) and circular menu are preserved. */
+(() => {
+'use strict';
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
+const $=s=>document.querySelector(s), clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),smooth=v=>{v=clamp(v);return v*v*(3-2*v);},mix=(a,b,t)=>a+(b-a)*t;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const hero=$('#hero-pin-section'), menu=$('#circular-menu-section'),stage=$('#circular-stage'),bg=$('#bg-layer'),text=$('#atom-text'),dial=$('#left-dial'),desc=$('#dial-text-box'),ending=$('#story-ending');
+const canvas=$('#atom-canvas'),ctx=canvas.getContext('2d');
+const videoStage=$('#video-stage');
+
+let toastTimer;function toast(message){const el=$('#toast-modal');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
+
+/* ── Timeline structure ─────────────────────────────────────── */
+// Atom frames: 0–6 (white background atom animation + fission)
+// Video frames: 6 – 6+videoScrollUnits (9 MP4 segments)
+// Ending frame: after videos
+// Then circular menu section
+
+const ATOM_FRAMES = VideoScrubber.VIDEO_START; // frames 0–6 are atom
+const ATOM_LENGTHS = [0.40,0.35,0.40,0.40,0.40,0.40,0.65]; // scroll lengths per atom frame
+
+const chapters=[['LIFE SCIENCE','방사선 융합기술 개발'],['EXPLORATION','양자빔 활용 과학기술'],['FUTURE ENERGY','선진 원자로 기술개발']];
+
+// SVG dial numbers (reused from original)
+const ns='http://www.w3.org/2000/svg';const numbers=Array.from({length:4},(_,i)=>{const g=document.createElementNS(ns,'g'),c=document.createElementNS(ns,'circle'),t=document.createElementNS(ns,'text');c.setAttribute('r','6');c.setAttribute('stroke','currentColor');c.setAttribute('fill','none');t.setAttribute('x','16');t.setAttribute('y','29');t.setAttribute('class','dial-number');t.textContent=`0${i}.`;g.append(c,t);$('#dial-numbers').append(g);return g;});
+
+let unit=600,s=1,ox=0,oy=0,w=0,h=0,dpr=1,position=0,target=0,lastTime=0,raf=0,menuExit=0;
+
+// Cumulative scroll positions (rebuilt on resize and when video data ready)
+let cumulative=[]; // [0]=start of atom frame 0 ... [ATOM_FRAMES]=start of video region ...
+let LAST=0; // total number of "frames" in the timeline
+let endingScrollStart=0; // scroll position where ending begins
+let totalHeight=0;
+
+function rebuildTimeline(){
+ const videoUnits = VideoScrubber.totalScrollUnits;
+ // Atom section: 7 frames
+ cumulative=[0];
+ ATOM_LENGTHS.forEach(v=>cumulative.push(cumulative.at(-1)+v*unit));
+ // Video section: one continuous block mapped to videoUnits
+ // We create sub-frames for the video region so getPosition() works smoothly
+ const videoScrollPx = videoUnits * unit;
+ cumulative.push(cumulative.at(-1) + videoScrollPx);
+ // Ending frame (brief text display before menu)
+ const endingLength = 0.75 * unit;
+ endingScrollStart = cumulative.at(-1);
+ cumulative.push(cumulative.at(-1) + endingLength);
+
+ LAST = cumulative.length - 1; // index of the last segment end
+ totalHeight = cumulative.at(-1) + h;
+ hero.style.height = totalHeight + 'px';
+}
+
+function setupSize(){
+ w=innerWidth;h=innerHeight;s=Math.min(w/1920,h/1024);ox=(w-1920*s)/2;oy=(h-1024*s)/2;dpr=Math.min(devicePixelRatio||1,1.5);
+ document.documentElement.style.setProperty('--s',s);
+ unit=Math.max(480,h*.8);
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ rebuildTimeline();
+ VideoScrubber.resize();
+ layoutMenu();
+}
+
+// Map scrollY to a continuous position value
+// 0..ATOM_FRAMES = atom region
+// ATOM_FRAMES..ATOM_FRAMES+videoScrollUnits = video region
+// after that = ending
+function getPosition(y){
+ y=clamp(y,0,cumulative.at(-1));
+ // Atom region (frames 0-6)
+ if(y<=cumulative[ATOM_FRAMES]){
+  let i=0;
+  while(i<ATOM_FRAMES-1 && y>cumulative[i+1]) i++;
+  return i+clamp((y-cumulative[i])/(cumulative[i+1]-cumulative[i]));
+ }
+ // Video region
+ const videoStart = cumulative[ATOM_FRAMES];
+ const videoEnd = cumulative[ATOM_FRAMES+1];
+ if(y<=videoEnd){
+  const videoProgress = clamp((y-videoStart)/(videoEnd-videoStart));
+  return ATOM_FRAMES + videoProgress * VideoScrubber.totalScrollUnits;
+ }
+ // Ending region
+ const endStart = cumulative[ATOM_FRAMES+1];
+ const endEnd = cumulative[ATOM_FRAMES+2];
+ const endProgress = clamp((y-endStart)/(endEnd-endStart));
+ return ATOM_FRAMES + VideoScrubber.totalScrollUnits + endProgress;
+}
+
+function goFrame(frame){window.scrollTo({top:cumulative[Math.min(frame,ATOM_FRAMES)]||0,behavior:reduced.matches?'auto':'smooth'});}
+function visible(el,alpha){alpha=clamp(alpha);el.style.opacity=alpha;el.style.visibility=alpha>.001?'visible':'hidden';}
+
+/* ── Video-aware blackness ─────────────────────────────────── */
+function blackness(p){
+ // Atom region: white
+ if(p<VideoScrubber.VIDEO_START) return 0;
+ // Video region: delegate to VideoScrubber
+ const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
+ if(p<=videoEnd) return VideoScrubber.getBlackness(p);
+ // Ending: ramp back to white
+ const overrun = p - videoEnd;
+ return 1-smooth(clamp(overrun/0.75));
+}
+
+/* ── Dial & Text (video-aware) ─────────────────────────────── */
+function drawDialVideo(p){
+ // Supplied MP4s already include chapter numbers AND captions.
+ // Do not overlay a second dial or caption on the baked-in artwork.
+ visible(dial, 0);
+ visible(desc, 0);
+ desc.inert = true;
+}
+
+/* ── Main render loop ──────────────────────────────────────── */
+function render(now){
+ raf=0;if(document.hidden)return;
+ const dt=lastTime?Math.min(64,now-lastTime):16;lastTime=now;
+ target=getPosition(scrollY);
+ position=reduced.matches?target:mix(position,target,1-Math.exp(-dt/95));
+ if(Math.abs(position-target)<.0001)position=target;
+ const t=reduced.matches?0:now/1000;
+
+ const black=blackness(position);
+ // Background color
+ bg.style.backgroundColor=`rgb(${Math.round(255*(1-black))},${Math.round(255*(1-black))},${Math.round(255*(1-black))})`;
+ document.body.classList.toggle('theme-dark',black>.53);
+ document.body.classList.toggle('theme-light',black<=.53);
+
+ const isInVideoRegion = position >= VideoScrubber.VIDEO_START && position < VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
+ const videoOpacity = VideoScrubber.getVideoOpacity(position);
+
+ // Atom Canvas
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ if(position<7.15 && videoOpacity<1){
+  const atomAlpha = 1 - videoOpacity;
+  ctx.globalAlpha = atomAlpha;
+  const dx=reduced.matches?0:10*Math.sin(t*.7),dy=reduced.matches?0:12*Math.sin(t*.53);
+  AtomRenderer.draw(ctx,position,t,ox+(960+dx)*s,oy+(512+dy)*s,s,black,reduced.matches);
+  ctx.globalAlpha = 1;
+ }
+ // Atom canvas z-index: above video when in atom region, below when in video region
+ canvas.style.zIndex = videoOpacity > 0.5 ? '0' : '2';
+
+ // Video scrubber update
+ if(isInVideoRegion || Math.abs(position-VideoScrubber.VIDEO_START)<1){
+  VideoScrubber.update(position);
+ } else {
+  // Outside video region: make sure videos are hidden
+  VideoScrubber.update(position);
+ }
+
+ // Atom text
+ visible(text,1-smooth((position-.25)/.7));
+ text.style.transform=`translateY(${-smooth((position-.25)/.7)*18}px)`;
+
+ // Dial
+ if(isInVideoRegion){
+  drawDialVideo(position);
+ } else {
+  visible(dial,0); visible(desc,0); desc.inert=true;
+ }
+
+ // Ending text
+ const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
+ const endingProgress = smooth(clamp((position - videoEnd) / 0.5));
+ const endingFadeOut = smooth(clamp((position - videoEnd - 0.5) / 0.25));
+ visible(ending, endingProgress * (1 - endingFadeOut));
+
+ // Circular menu section
+ const menuTop=menu.getBoundingClientRect().top;menuExit=clamp(-menuTop/h);renderExit(menuExit);
+
+ // Scroll indicator
+ const indicator=$('#scroll-indicator');
+ const videoScrollHidden = isInVideoRegion;
+ const pastMenu = scrollY>menu.offsetTop+h*.7;
+ indicator.style.opacity = (pastMenu || videoScrollHidden) ? '0' : '1';
+ $('.scroll-text').textContent=position<.8?'스크롤하여 원자의 흐름을 따라가세요.':'스크롤';
+
+ // Theme override: after hero section, force light
+ if(scrollY>hero.offsetHeight-h){document.body.classList.remove('theme-dark');document.body.classList.add('theme-light');}
+
+ // Hide atom fallback
+ $('#atom-fallback').hidden=true;
+
+ // Continue animation loop
+ if(scrollY<hero.offsetHeight||Math.abs(position-target)>.001)raf=requestAnimationFrame(render);
+}
+function wake(){if(!raf)raf=requestAnimationFrame(render);}
+
+/* ── Circular Menu (unchanged from original) ───────────────── */
+const items=window.KAERI_MENU, els=new Map();let selected=null,selectedAtY=0;const small=[];
+const menuPositions={intro:[960,620],news:[60,995],safety:[1530,365],rnd:[1455,875],visit:[1850,995],customer:[20,520],region:[355,335],achievement:[540,645],edu:[550,1000],info:[1160,320],tech:[1305,590],recruit:[1150,1000],video:[320,775],sns:[620,320],patent:[1800,665]};
+items.forEach((item,index)=>{const coords=menuPositions[item.id]||[item.posX*19.2,item.posY*10.24];item.x=coords[0];item.y=coords[1];item.connected=false;const wrap=document.createElement('div');wrap.className='circle-position';wrap.id='menu-'+item.id;wrap.style.left=item.x+'px';wrap.style.top=item.y+'px';wrap.style.width=wrap.style.height=item.baseSize+'px';const exit=document.createElement('div');exit.className='circle-exit';const circle=document.createElement('div');circle.className='menu-circle';circle.dataset.id=item.id;circle.style.setProperty('--hover',item.hoverColor);circle.style.setProperty('--ink',item.textColor);circle.style.setProperty('--title-size',Math.min(23,item.baseSize*.10)+'px');circle.style.setProperty('--desc-size',Math.min(17,item.baseSize*.075)+'px');const button=document.createElement('button');button.className='circle-select';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label',item.name);button.innerHTML=`<span class="circle-title">${item.name}</span><span class="circle-desc">${item.hoverText}</span>`;const detail=document.createElement('button');detail.className='circle-detail-btn';detail.textContent='자세히 보기 →';detail.tabIndex=-1;detail.setAttribute('aria-label',item.name+' 자세히 보기');detail.addEventListener('click',()=>toast(item.name+' 페이지는 아직 연결되지 않았습니다.'));button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){e.preventDefault();button.focus({preventScroll:true});}});button.addEventListener('click',()=>selected===item.id?deselect():select(item.id));button.addEventListener('focus',()=>circle.classList.add('is-hovered'));button.addEventListener('blur',()=>circle.classList.remove('is-hovered'));circle.addEventListener('mouseenter',()=>circle.classList.add('is-hovered'));circle.addEventListener('mouseleave',()=>circle.classList.remove('is-hovered'));circle.append(button,detail);exit.append(circle);wrap.append(exit);$('#main-circles-container').append(wrap);els.set(item.id,{wrap,exit,circle,button,detail,index});});
+const sp=[[135,215],[365,165],[750,300],[1000,190],[1340,235],[1870,220],[1750,310],[1450,570],[1180,850],[1610,990],[750,960],[200,760],[375,565],[1130,470],[225,415],[755,475]];
+sp.forEach(([x,y],i)=>{const wrap=document.createElement('div');wrap.className='small-position';wrap.style.left=x+'px';wrap.style.top=y+'px';wrap.innerHTML='<div class="circle-exit"><div class="small-push"><div class="small-dot"></div></div></div>';const dot=wrap.querySelector('.small-dot');dot.style.setProperty('--duration',(4+i%5)+'s');dot.style.setProperty('--delay',(-i*.6)+'s');dot.style.setProperty('--dx',(i%2?-12:10)+'px');dot.style.setProperty('--dy',(i%3?-14:11)+'px');$('#small-circles-container').append(wrap);small.push({x,y,wrap,push:wrap.querySelector('.small-push'),exit:wrap.querySelector('.circle-exit')});});
+function push(el,x,y){el.style.setProperty('--push-x',x+'px');el.style.setProperty('--push-y',y+'px');}
+function layoutMenu(){if(selected)select(selected);}
+function select(id){selected=id;selectedAtY=scrollY;const a=items.find(i=>i.id===id);if(!a)return;const size=Math.min(a.hoverSize,Math.max(150,(h-180)/s));const xmin=(0-ox)/s,xmax=(w-ox)/s,ymin=(0-oy)/s,ymax=(h-oy)/s;const x=clamp(a.x,xmin+size/2+35,xmax-size/2-90),y=clamp(a.y,ymin+size/2+145,ymax-size/2-45);
+ items.forEach(b=>{const e=els.get(b.id),active=b===a;e.circle.classList.toggle('is-selected',active);e.circle.classList.toggle('is-blurred',!active);e.wrap.style.zIndex=active?'50':'1';e.button.setAttribute('aria-expanded',String(active));e.detail.tabIndex=active?0:-1;e.circle.style.width=e.circle.style.height=(active?size:b.baseSize)+'px';if(active)push(e.circle,x-a.x-(size-a.baseSize)/2,y-a.y-(size-a.baseSize)/2);else{const dx=b.x-x,dy=b.y-y,dist=Math.hypot(dx,dy)||1,need=Math.max(0,(size+b.baseSize)/2+45-dist),fall=Math.max(.08,1-dist/1100),amt=Math.max(need,130*fall);push(e.circle,dx/dist*amt,dy/dist*amt);}});
+ small.forEach(b=>{const dx=b.x-x,dy=b.y-y,d=Math.hypot(dx,dy)||1,amt=65*Math.max(0,1-d/900);push(b.push,dx/d*amt,dy/d*amt);b.push.classList.add('is-blurred');});document.querySelectorAll('.blur-element').forEach(e=>e.classList.add('is-blurred'));}
+function deselect(){selected=null;items.forEach(a=>{const e=els.get(a.id);e.circle.classList.remove('is-selected','is-blurred');e.button.setAttribute('aria-expanded','false');e.detail.tabIndex=-1;e.circle.style.width=e.circle.style.height=a.baseSize+'px';push(e.circle,0,0);e.wrap.style.zIndex='1';});small.forEach(e=>{push(e.push,0,0);e.push.classList.remove('is-blurred');});document.querySelectorAll('.blur-element').forEach(e=>e.classList.remove('is-blurred'));}
+function renderExit(p){els.forEach(e=>{e.exit.style.transform=`translateY(${-p*(220+(e.index%5)*65)}px)`;e.exit.style.opacity=1-smooth((p-.45)/.55);});small.forEach((e,i)=>{e.exit.style.transform=`translateY(${-p*(310+i%4*70)}px)`;e.exit.style.opacity=1-smooth((p-.4)/.6);});}
+menu.addEventListener('click',e=>{if(!e.target.closest('.menu-circle'))deselect();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const old=selected;deselect();if(old)els.get(old).button.focus({preventScroll:true});}});addEventListener('scroll',()=>{if(selected&&Math.abs(scrollY-selectedAtY)>.5)deselect();wake();},{passive:true});
+function openMenu(id){deselect();window.scrollTo({top:menu.offsetTop,behavior:'auto'});wake();if(id&&els.has(id)){select(id);els.get(id).button.focus({preventScroll:true});}}
+$('#hamburger-btn').addEventListener('click',()=>openMenu());$('.lang-btn').addEventListener('click',()=>toast('영문 페이지는 준비 중입니다.'));$('#dial-detail-btn').addEventListener('click',()=>toast('해당 연구 상세 페이지는 아직 연결되지 않았습니다.'));document.querySelectorAll('.shortcut-sns-widget button').forEach(b=>b.addEventListener('click',()=>toast(b.getAttribute('aria-label')+' 링크는 아직 연결되지 않았습니다.')));
+document.querySelectorAll('.header a,.shortcut-bar a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const hash=a.getAttribute('href');if(hash==='#home'){goFrame(0);return;}openMenu(hash.replace('#menu-','').replace('#',''));}));
+addEventListener('resize',()=>{setupSize();position=target=getPosition(scrollY);wake();});document.addEventListener('visibilitychange',()=>{lastTime=0;wake();});reduced.addEventListener('change',wake);
+
+/* ── Init ───────────────────────────────────────────────────── */
+VideoScrubber.init(videoStage, bg);
+setupSize();position=target=getPosition(scrollY);wake();
+
+// Re-sync timeline once video metadata is loaded (durations may differ from defaults)
+const checkVideoReady = setInterval(()=>{
+ if(VideoScrubber.ready){
+  clearInterval(checkVideoReady);
+  rebuildTimeline();
+  position=target=getPosition(scrollY);
+  VideoScrubber.resize();
+  wake();
+ }
+},200);
+})();

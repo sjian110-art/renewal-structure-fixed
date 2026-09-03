@@ -1,0 +1,940 @@
+/* ==========================================================================
+   KAERI Web Renewal - Comprehensive Design System & Styles
+   ========================================================================== */
+
+/* --- Reset & Base Settings --- */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: 'Noto Sans KR', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Blur targets transition with 0.1s delay after push motion starts */
+.blur-element,
+.menu-circle,
+.small-circle {
+    transition: filter 0.35s ease 0.1s, opacity 0.35s ease 0.1s;
+}
+
+/* Applied to non-selected elements during selection */
+.is-blurred {
+    filter: blur(3px) !important;
+    opacity: 0.75 !important;
+}
+
+/* --- Fixed Header Navigation (hero-main.png Precision Alignment) --- */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.4s ease, border-color 0.4s ease, filter 0.35s ease 0.1s, opacity 0.35s ease 0.1s;
+}
+
+.header-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 94px;
+    padding-right: 94px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Logo */
+.logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.logo-img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+/* Logo & Element Theme Switch: Light (Dark UI) vs Dark (White UI) */
+body.theme-light .logo-dark { display: none !important; }
+body.theme-light .logo-light { display: block !important; }
+body.theme-dark .logo-light { display: none !important; }
+body.theme-dark .logo-dark { display: block !important; }
+
+body.theme-light .icon-dark { display: none !important; }
+body.theme-light .icon-light { display: block !important; }
+body.theme-dark .icon-light { display: none !important; }
+body.theme-dark .icon-dark { display: block !important; }
+
+/* GNB Navigation */
+.gnb-list {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 2.6rem;
+}
+
+.gnb-list a {
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    transition: color 0.3s ease;
+}
+
+body.theme-light .gnb-list a { color: #111111; }
+body.theme-dark .gnb-list a { color: #ffffff; }
+
+.gnb-list a:hover {
+    color: #6C63FF !important;
+}
+
+/* Header Right Buttons */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+}
+
+.lang-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.lang-btn img {
+    height: 24px;
+    width: auto;
+    display: block;
+}
+
+.hamburger-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.hamburger-btn img {
+    height: 24px;
+    width: auto;
+    display: block;
+}
+
+/* --- Right Shortcut Bar (우측 바로가기 - Original PNG Tab Widgets) --- */
+.shortcut-bar {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    transition: filter 0.35s ease 0.1s, opacity 0.35s ease 0.1s;
+}
+
+.shortcut-tab-widget .shortcut-img {
+    width: 82px;
+    height: auto;
+    display: block;
+    cursor: pointer;
+}
+
+.shortcut-sns-widget .shortcut-img {
+    width: 32px;
+    height: auto;
+    display: block;
+    cursor: pointer;
+}
+
+/* --- Scroll Down Indicator (hero-main.png Specification) --- */
+.scroll-indicator {
+    position: fixed;
+    bottom: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    pointer-events: none;
+    transition: filter 0.35s ease 0.1s, opacity 0.35s ease 0.1s;
+}
+
+.scroll-text {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    transition: color 0.3s ease;
+}
+
+body.theme-light .scroll-text { color: #111111; }
+body.theme-dark .scroll-text { color: #ffffff; }
+
+.scroll-arrow {
+    width: 16px;
+    height: auto;
+    animation: bounceArrow 2s infinite ease-in-out;
+}
+
+@keyframes bounceArrow {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(6px); }
+    60% { transform: translateY(3px); }
+}
+
+/* --- 1. Hero Pinned Scroll Sequence Section --- */
+.hero-pin-section {
+    width: 100%;
+    position: relative;
+}
+
+.hero-pin-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Background Transition Layer */
+.bg-transition-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    z-index: 1;
+    transition: background-color 0.5s ease;
+}
+
+/* White Atom Sequence Wrapper */
+.atom-sequence-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Atom Left Text Overlay (1920x1024 Baseline: left 94px, top 367px) */
+.atom-text-box {
+    position: absolute;
+    left: 94px;
+    top: 367px;
+    z-index: 20;
+    max-width: 500px;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.atom-text-box .sub-caption {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0px;
+    color: #111111;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.atom-text-box .sub-desc {
+    font-size: 15px;
+    font-weight: 400;
+    color: #333333;
+    margin-bottom: 24px;
+    line-height: 1.4;
+}
+
+.atom-text-box .main-heading {
+    font-size: 48px;
+    line-height: 70px;
+    font-weight: 300; /* Thin / Light font weight matching hero-main.png */
+    letter-spacing: -0.5px;
+    color: #111111;
+    margin: 0;
+}
+
+/* --- 3-Layer Non-Conflicting Atom Visual Stage --- */
+.atom-visual-stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Layer 1 (Outer Wrapper): Controlled strictly by GSAP ScrollTrigger */
+.atom-scroll-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    will-change: transform, opacity;
+}
+
+#atom-scroll-01 {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Layer 2 (Middle Wrapper): Continuous CSS Floating Motion */
+.atom-float-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    animation: atomFloating var(--float-dur, 6s) ease-in-out var(--float-del, 0s) infinite alternate;
+}
+
+@keyframes atomFloating {
+    0% {
+        transform: translate(0, 0);
+    }
+    33% {
+        transform: translate(var(--float-x, 12px), var(--float-y, -14px));
+    }
+    66% {
+        transform: translate(calc(var(--float-x, 12px) * -0.7), calc(var(--float-y, -14px) * 0.8));
+    }
+    100% {
+        transform: translate(calc(var(--float-x, 12px) * 0.4), calc(var(--float-y, -14px) * -0.6));
+    }
+}
+
+.atom-float-01 { --float-x: 12px; --float-y: -15px; --float-dur: 5.8s; --float-del: 0s; }
+.atom-float-02 { --float-x: -14px; --float-y: 12px; --float-dur: 6.4s; --float-del: 0.4s; }
+.atom-float-03 { --float-x: 15px; --float-y: -10px; --float-dur: 5.2s; --float-del: 0.8s; }
+.atom-float-04 { --float-x: -9px; --float-y: 11px; --float-dur: 7.1s; --float-del: 0.2s; }
+.atom-float-05 { --float-x: 10px; --float-y: -8px; --float-dur: 6.8s; --float-del: 0.6s; }
+.atom-float-06 { --float-x: -7px; --float-y: 9px; --float-dur: 7.5s; --float-del: 1.0s; }
+
+/* Layer 3 (Inner Image): Continuous Organic Breathing Pulse (scale 0.96 ~ 1.06) */
+.atom-pulse-img {
+    display: block;
+    object-fit: contain;
+    transform-origin: center center;
+    pointer-events: none;
+    animation: atomBreathing var(--pulse-dur, 2.8s) cubic-bezier(0.45, 0.05, 0.55, 0.95) var(--pulse-del, 0s) infinite alternate;
+}
+
+@keyframes atomBreathing {
+    0% {
+        transform: scale(0.96);
+    }
+    50% {
+        transform: scale(1.06);
+    }
+    100% {
+        transform: scale(0.97);
+    }
+}
+
+#atom-01 {
+    width: 110px !important;
+    height: 110px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    --pulse-dur: 2.4s;
+    --pulse-del: 0s;
+}
+
+#atom-02 { width: 700px; height: 700px; --pulse-dur: 2.6s; --pulse-del: 0.3s; }
+#atom-03 { width: 700px; height: 700px; --pulse-dur: 2.8s; --pulse-del: 0.6s; }
+#atom-04 { width: 700px; height: 700px; --pulse-dur: 3.0s; --pulse-del: 0.1s; }
+#atom-05 { width: 700px; height: 700px; --pulse-dur: 3.1s; --pulse-del: 0.4s; }
+#atom-06 { width: 700px; height: 700px; --pulse-dur: 3.2s; --pulse-del: 0.7s; }
+
+/* Dark Story Sequence Wrapper */
+.story-sequence-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* --- Left Circular Arc Dial System (hero-main-black5 Geometry & Thin Typography) --- */
+.left-dial-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.left-dial-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dial-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 350px;
+    height: 100%;
+    pointer-events: none;
+}
+
+.dial-items-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Dial Item: Thin, Large & Refined Numbers along Circular Arc Curve */
+.dial-item {
+    position: absolute;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300; /* Thin Light Font Weight matching hero-main-black5.png */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 1.8rem;
+    transform-origin: center center;
+    transition: color 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.dial-item.active {
+    color: #ffffff !important;
+    font-size: 3.2rem !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+.dial-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    background: transparent;
+    transition: all 0.4s ease;
+}
+
+.dial-item.active .dial-dot {
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* Fixed Text Description Box to the Right of Apex (Independently Controlled) */
+.dial-text-box {
+    position: absolute;
+    left: 180px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ffffff;
+    max-width: 440px;
+    z-index: 40;
+    pointer-events: auto;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease, transform 0.35s ease;
+}
+
+.dial-text-box.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dial-category {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.dial-title {
+    font-size: clamp(24px, 2vw, 32px);
+    font-weight: 400; /* Refined Light Font Weight matching hero-main-black5.png */
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+}
+
+.dial-detail-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.dial-detail-btn:hover {
+    opacity: 0.75;
+    transform: translateX(4px);
+}
+
+/* --- Organic Energy Aura & Layer Control --- */
+.energy-aura-layer {
+    position: absolute;
+    top: 50%;
+    left: 62%;
+    transform: translate(-50%, -50%);
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(168, 85, 247, 0.16) 45%, rgba(0, 0, 0, 0) 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 5;
+    animation: organicEnergyAura 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes organicEnergyAura {
+    0% {
+        transform: translate(-50%, -50%) scale(0.92);
+        opacity: 0.6;
+        filter: blur(35px) brightness(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.08);
+        opacity: 0.95;
+        filter: blur(48px) brightness(1.25);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.96);
+        opacity: 0.7;
+        filter: blur(32px) brightness(1.08);
+    }
+}
+
+/* Story Visual Stage */
+.story-visual-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.story-layer {
+    position: absolute;
+    max-width: 90%;
+    max-height: 85%;
+    object-fit: contain;
+    opacity: 0;
+    transform: scale(0.95);
+    will-change: transform, opacity;
+}
+
+/* Continuous breathing glow for non-structural energy/particle PNG layers */
+.story-layer:not(.story-structure) {
+    animation: particleBreathing 5s ease-in-out infinite alternate;
+}
+
+@keyframes particleBreathing {
+    0% {
+        filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.35)) drop-shadow(0 0 45px rgba(168, 85, 247, 0.2));
+    }
+    50% {
+        filter: drop-shadow(0 0 40px rgba(56, 189, 248, 0.65)) drop-shadow(0 0 75px rgba(168, 85, 247, 0.45));
+    }
+    100% {
+        filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.4)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.25));
+    }
+}
+
+/* Solid rigid structural images (Medical device story-05 & Reactor story-12) */
+.story-structure {
+    animation: none !important;
+    filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.35));
+}
+
+/* --- 2. Circular Interactive Menu Section (hero-main7) --- */
+.circular-menu-section {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    min-height: 800px;
+    background-color: #ffffff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Backdrop Overlay for Deselecting */
+.circular-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: default;
+}
+
+.circular-menu-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 1920px;
+    max-height: 1024px;
+    z-index: 5;
+}
+
+/* Container for main 15 circles */
+.main-circles-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Single Circle Menu Element */
+.menu-circle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #E9E9E9;
+    box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+    padding: 1.5rem;
+    overflow: hidden;
+    user-select: none;
+    outline: none;
+    border: none;
+    will-change: transform, width, height, background-color, box-shadow, z-index;
+}
+
+/* Focus style for keyboard accessibility */
+.menu-circle:focus-visible {
+    outline: 4px solid #6C63FF;
+    outline-offset: 4px;
+}
+
+/* Circle Hover State: Color change & description preview ONLY (NO scale, NO push) */
+.menu-circle.is-hovered {
+    z-index: 50;
+}
+
+/* Circle Selected State: Expanded, elevated z-index & shadow */
+.menu-circle.is-selected {
+    z-index: 100 !important;
+    box-shadow: 0 20px 30px 10px rgba(0, 0, 0, 0.5) !important;
+    filter: none !important;
+    opacity: 1 !important;
+}
+
+/* Circle Content Box */
+.circle-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Circle Menu Title Text */
+.circle-title {
+    font-size: clamp(14px, 1.2vw, 24px);
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+    transition: color 0.35s ease;
+}
+
+/* Circle Description Text */
+.circle-desc {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(8px);
+    font-size: clamp(12px, 0.95vw, 17px);
+    font-weight: 500;
+    line-height: 1.3;
+    margin-top: 4px;
+    white-space: nowrap;
+    transition: opacity 0.3s ease, transform 0.3s ease, color 0.35s ease, max-height 0.3s ease;
+}
+
+/* Reveal description on hover or selection */
+.menu-circle.is-hovered .circle-desc,
+.menu-circle.is-selected .circle-desc {
+    opacity: 1;
+    max-height: 40px;
+    transform: translateY(0);
+}
+
+/* '자세히 보기 →' Button Link inside Selected Circle */
+.circle-detail-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 8px 20px;
+    font-size: clamp(12px, 0.9vw, 15px);
+    font-weight: 700;
+    border-radius: 25px;
+    background-color: rgba(255, 255, 255, 0.25);
+    color: inherit;
+    text-decoration: none;
+    border: 1.5px solid currentColor;
+    backdrop-filter: blur(4px);
+    pointer-events: auto;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease 0.15s, visibility 0.3s ease 0.15s, transform 0.3s ease 0.15s, background-color 0.2s ease;
+}
+
+.menu-circle.is-selected .circle-detail-btn {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.circle-detail-btn:hover {
+    background-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Small Decorative Floating Circles */
+.small-circles-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.small-circle {
+    position: absolute;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background-color: #E9E9E9;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+    will-change: transform;
+    animation: floatingCircle var(--duration, 6s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes floatingCircle {
+    0% {
+        transform: translate(-50%, -50%) translate(0, 0);
+    }
+    50% {
+        transform: translate(-50%, -50%) translate(var(--dx, 8px), var(--dy, -10px));
+    }
+    100% {
+        transform: translate(-50%, -50%) translate(calc(var(--dx, 8px) * -0.7), calc(var(--dy, -10px) * -0.8));
+    }
+}
+
+/* --- 3. Next Section Placeholder --- */
+.next-section {
+    position: relative;
+    width: 100vw;
+    min-height: 80vh;
+    background-color: #0b1120;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem;
+    z-index: 10;
+}
+
+.next-section-container {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.next-tag {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #38bdf8;
+    text-transform: uppercase;
+}
+
+.next-title {
+    font-size: clamp(2rem, 3vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.next-desc {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    max-width: 600px;
+}
+
+.next-notice-box {
+    margin-top: 1.5rem;
+    padding: 1rem 1.8rem;
+    background-color: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+}
+
+.notice-badge {
+    background-color: #0284c7;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* --- Toast Modal for Unconnected Items --- */
+.toast-modal {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background-color: rgba(15, 23, 42, 0.95);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    padding: 12px 28px;
+    border-radius: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    z-index: 2000;
+    font-size: 0.95rem;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s ease;
+}
+
+.toast-modal.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --- Footer --- */
+.footer {
+    width: 100%;
+    padding: 2.5rem 0;
+    background-color: #080c14;
+    color: #94a3b8;
+    text-align: center;
+    font-size: 0.9rem;
+    border-top: 1px solid #1e293b;
+    position: relative;
+    z-index: 10;
+}
+
+/* --- Accessibility & Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .small-circle {
+        animation: none !important;
+    }
+    .scroll-arrow {
+        animation: none !important;
+    }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+    .header-container {
+        padding-left: 5vw;
+        padding-right: 5vw;
+    }
+    .atom-text-box {
+        left: 5vw;
+        top: 30vh;
+    }
+}

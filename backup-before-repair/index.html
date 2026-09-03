@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국원자력연구원 | KAERI Digital Exhibition</title>
+    <!-- Google Fonts: Noto Sans KR (300 Thin, 400 Regular, 700 Bold) & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800;900&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- GSAP & ScrollTrigger CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="js/script.js" defer></script>
+</head>
+<body class="theme-light">
+    <!-- Fixed Header Navigation -->
+    <header id="header" class="header blur-element">
+        <div class="header-container">
+            <h1 class="logo">
+                <a href="#intro" aria-label="한국원자력연구원 홈">
+                    <img src="assets/logo-on-light.png" alt="한국원자력연구원 Logo" class="logo-img logo-light">
+                    <img src="assets/logo-on-dark.png" alt="한국원자력연구원 Logo Dark" class="logo-img logo-dark">
+                </a>
+            </h1>
+
+            <nav class="gnb" aria-label="주요 메뉴">
+                <ul class="gnb-list">
+                    <li><a href="#info">정보공개</a></li>
+                    <li><a href="#rnd">연구개발</a></li>
+                    <li><a href="#safety">안전정보</a></li>
+                    <li><a href="#community">소통마당</a></li>
+                    <li><a href="#customer">고객참여</a></li>
+                    <li><a href="#intro">KAERI 소개</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-right">
+                <button type="button" class="lang-btn" aria-label="언어 선택 (ENG)">
+                    <img src="assets/icon-globe-light.png" alt="ENG" class="icon-light">
+                    <img src="assets/icon-globe-dark.png" alt="ENG" class="icon-dark">
+                </button>
+                <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="전체 메뉴 열기">
+                    <img src="assets/icon-menu-light.png" alt="Menu" class="icon-light">
+                    <img src="assets/icon-menu-dark.png" alt="Menu" class="icon-dark">
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Right Shortcut Bar (우측 바로가기 - Original PNG Assets) -->
+    <aside class="shortcut-bar blur-element" aria-label="우측 빠른 바로가기">
+        <div class="shortcut-tab-widget">
+            <img src="assets/icon-screen-tab-light.png" alt="화면 바로가기 메뉴" class="shortcut-img icon-light" usemap="#screen-tab-map">
+            <img src="assets/icon-screen-tab-dark.png" alt="화면 바로가기 메뉴 Dark" class="shortcut-img icon-dark" usemap="#screen-tab-map">
+            <map name="screen-tab-map">
+                <area shape="rect" coords="0,0,82,45" href="#intro" alt="첫 화면">
+                <area shape="rect" coords="0,45,82,90" href="#rnd" alt="연구개발">
+                <area shape="rect" coords="0,90,82,135" href="#safety" alt="안전정보">
+                <area shape="rect" coords="0,135,82,180" href="#customer" alt="고객참여">
+            </map>
+        </div>
+
+        <div class="shortcut-sns-widget">
+            <img src="assets/icon-sns-tab-light.png" alt="SNS 바로가기 메뉴" class="shortcut-img icon-light" usemap="#sns-tab-map">
+            <img src="assets/icon-sns-tab-dark.png" alt="SNS 바로가기 메뉴 Dark" class="shortcut-img icon-dark" usemap="#sns-tab-map">
+            <map name="sns-tab-map">
+                <area shape="rect" coords="0,0,32,32" href="#blog" alt="블로그 바로가기">
+                <area shape="rect" coords="0,32,32,64" href="#facebook" alt="페이스북 바로가기">
+                <area shape="rect" coords="0,64,32,96" href="#instagram" alt="인스타그램 바로가기">
+                <area shape="rect" coords="0,96,32,128" href="#youtube" alt="유튜브 바로가기">
+            </map>
+        </div>
+    </aside>
+
+    <!-- Scroll Down Indicator (hero-main.png Specification) -->
+    <div class="scroll-indicator blur-element" id="scroll-indicator">
+        <span class="scroll-text">스크롤하여 원자의 흐름을 따라가세요.</span>
+        <img src="assets/icon-arrow-down-light.png" alt="Down" class="scroll-arrow icon-light">
+        <img src="assets/icon-arrow-down-dark.png" alt="Down Dark" class="scroll-arrow icon-dark">
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="main">
+        <!-- 1. Hero Pinned Scroll Sequence Section -->
+        <section id="hero-pin-section" class="hero-pin-section">
+            <div class="hero-pin-container">
+                <!-- Background Fade Layer -->
+                <div class="bg-transition-layer" id="bg-layer"></div>
+
+                <!-- Sub-section A: White Atom Sequence -->
+                <div class="atom-sequence-wrapper" id="atom-sequence">
+                    <div class="atom-text-box" id="atom-text">
+                        <p class="sub-caption">KAERI</p>
+                        <p class="sub-desc">미래를 설계하는 원자력 연구</p>
+                        <h1 class="main-heading">
+                            원자에서 시작되는<br>
+                            대한민국의 미래
+                        </h1>
+                    </div>
+
+                    <!-- 3-Layer Atom Stage Architecture -->
+                    <div class="atom-visual-stage">
+                        <!-- Atom 01 Core Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-01" id="atom-scroll-01">
+                            <div class="atom-float-wrapper atom-float-01">
+                                <img src="assets/atom-01-core.png" alt="Atom Core" class="atom-layer atom-pulse-img atom-pulse-01" id="atom-01">
+                            </div>
+                        </div>
+
+                        <!-- Atom 02 Expanding Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-02" id="atom-scroll-02">
+                            <div class="atom-float-wrapper atom-float-02">
+                                <img src="assets/atom-02-expanding.png" alt="Atom Expanding" class="atom-layer atom-pulse-img atom-pulse-02" id="atom-02">
+                            </div>
+                        </div>
+
+                        <!-- Atom 03 Radial Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-03" id="atom-scroll-03">
+                            <div class="atom-float-wrapper atom-float-03">
+                                <img src="assets/atom-03-radial.png" alt="Atom Radial" class="atom-layer atom-pulse-img atom-pulse-03" id="atom-03">
+                            </div>
+                        </div>
+
+                        <!-- Atom 04 Orbits Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-04" id="atom-scroll-04">
+                            <div class="atom-float-wrapper atom-float-04">
+                                <img src="assets/atom-04-orbits.png" alt="Atom Orbits" class="atom-layer atom-pulse-img atom-pulse-04" id="atom-04">
+                            </div>
+                        </div>
+
+                        <!-- Atom 05 Orbits Expanded Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-05" id="atom-scroll-05">
+                            <div class="atom-float-wrapper atom-float-05">
+                                <img src="assets/atom-05-orbits-expanded.png" alt="Atom Orbits Expanded" class="atom-layer atom-pulse-img atom-pulse-05" id="atom-05">
+                            </div>
+                        </div>
+
+                        <!-- Atom 06 Orbits Full Stage -->
+                        <div class="atom-scroll-wrapper atom-scroll-06" id="atom-scroll-06">
+                            <div class="atom-float-wrapper atom-float-06">
+                                <img src="assets/atom-06-orbits-full.png" alt="Atom Orbits Full" class="atom-layer atom-pulse-img atom-pulse-06" id="atom-06">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-section B: Dark Story Sequence -->
+                <div class="story-sequence-wrapper" id="story-sequence">
+                    <!-- Left Circular Arc Dial System (hero-main-black4~12) -->
+                    <div class="left-dial-container" id="left-dial">
+                        <svg class="dial-svg" viewBox="0 0 400 1000" preserveAspectRatio="xMinYMid meet">
+                            <!-- Clean Circular Arc Path -->
+                            <path id="dial-arc-path" d="M -450 500 A 750 750 0 0 1 140 500 A 750 750 0 0 1 -450 1250" fill="none" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.5"/>
+                        </svg>
+
+                        <!-- Dial Items along Circular Arc (00, 01, 02, 03, 04) -->
+                        <div class="dial-items-container" id="dial-items-container"></div>
+                    </div>
+
+                    <!-- Fixed Text Description Box to the right of Apex (Independently Controlled) -->
+                    <div class="dial-text-box" id="dial-text-box">
+                        <span class="dial-category" id="dial-category">LIFE SCIENCE</span>
+                        <h3 class="dial-title" id="dial-title">방사선 융합기술 개발</h3>
+                        <a href="#detail" class="dial-detail-btn" id="dial-detail-btn" aria-label="자세히 보기">
+                            자세히 보기 &rarr;
+                        </a>
+                    </div>
+
+                    <!-- Ambient Continuous Energy Aura Layer -->
+                    <div class="energy-aura-layer" id="energy-aura"></div>
+
+                    <!-- Story Visual Stage -->
+                    <div class="story-visual-stage">
+                        <!-- Story Layers 01 ~ 22 -->
+                        <img src="assets/story-01-atom-glow.png" alt="Story 01 Atom Glow" class="story-layer" id="story-01">
+                        <img src="assets/story-02-energy-wave-purple.png" alt="Story 02 Energy Wave" class="story-layer" id="story-02">
+                        <img src="assets/story-03-energy-wave-teal.png" alt="Story 03 Energy Teal" class="story-layer" id="story-03">
+                        <img src="assets/story-04-particles-teal.png" alt="Story 04 Particles Teal" class="story-layer" id="story-04">
+                        <img src="assets/story-05-medical-device.png" alt="Story 05 Medical Device" class="story-layer story-structure" id="story-05">
+                        <img src="assets/story-06-particles-purple.png" alt="Story 06 Particles Purple" class="story-layer" id="story-06">
+                        <img src="assets/story-07-galaxy.png" alt="Story 07 Galaxy" class="story-layer" id="story-07">
+                        <img src="assets/story-08-planets.png" alt="Story 08 Planets" class="story-layer story-structure" id="story-08">
+                        <img src="assets/story-09-energy-trail-purple.png" alt="Story 09 Energy Trail" class="story-layer" id="story-09">
+                        <img src="assets/story-10-energy-wave-blue.png" alt="Story 10 Energy Wave Blue" class="story-layer" id="story-10">
+                        <img src="assets/story-11-particles-blue.png" alt="Story 11 Particles Blue" class="story-layer" id="story-11">
+                        <img src="assets/story-12-reactor.png" alt="Story 12 Nuclear Reactor" class="story-layer story-structure" id="story-12">
+                        <img src="assets/story-13-energy-trail-blue.png" alt="Story 13 Energy Trail Blue" class="story-layer" id="story-13">
+                        <img src="assets/story-14-energy-flow-blue.png" alt="Story 14 Energy Flow Blue" class="story-layer" id="story-14">
+                        <img src="assets/story-15-human-profile.png" alt="Story 15 Human Profile" class="story-layer" id="story-15">
+                        <img src="assets/story-16-human-heart.png" alt="Story 16 Human Heart" class="story-layer" id="story-16">
+                        <img src="assets/story-17-hand-reaching.png" alt="Story 17 Hand Reaching" class="story-layer" id="story-17">
+                        <img src="assets/story-18-hands-approaching.png" alt="Story 18 Hands Approaching" class="story-layer" id="story-18">
+                        <img src="assets/story-19-hands-contact.png" alt="Story 19 Hands Contact" class="story-layer" id="story-19">
+                        <img src="assets/story-20-hands-handshake.png" alt="Story 20 Hands Handshake" class="story-layer" id="story-20">
+                        <img src="assets/story-21-hands-absorbing.png" alt="Story 21 Hands Absorbing" class="story-layer" id="story-21">
+                        <img src="assets/story-22-hands-absorbed.png" alt="Story 22 Hands Absorbed" class="story-layer" id="story-22">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Circular Interactive Menu Section (hero-main7) -->
+        <section id="circular-menu-section" class="circular-menu-section">
+            <!-- Empty Backdrop Click Area for Deselecting -->
+            <div class="circular-backdrop" id="circular-backdrop" aria-label="메뉴 선택 해제"></div>
+
+            <div class="circular-menu-stage" id="circular-stage">
+                <!-- 15 Main Circle Links dynamically populated/rendered -->
+                <div class="main-circles-container" id="main-circles-container"></div>
+
+                <!-- 16 Small Decorative Floating Circles -->
+                <div class="small-circles-container" id="small-circles-container"></div>
+            </div>
+        </section>
+
+        <!-- 3. Next Section Placeholder (Scrolled Section Structure) -->
+        <section id="next-section" class="next-section">
+            <div class="next-section-container">
+                <span class="next-tag">KAERI DIGITAL ARCHIVE</span>
+                <h2 class="next-title">원자력 기술 종합 전시관</h2>
+                <p class="next-desc">한국원자력연구원의 연구 성과와 미래 비전을 자유롭게 살펴보세요.</p>
+                <div class="next-notice-box">
+                    <span class="notice-badge">안내</span>
+                    <p>본 섹션은 원형 메뉴 이후 이어지는 스크롤 연결 연출 구조가 준비된 상태입니다.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification Modal for Unconnected Items -->
+    <div id="toast-modal" class="toast-modal" role="status" aria-live="polite">
+        <p id="toast-message">해당 서비스는 준비 중입니다.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer blur-element">
+        <div class="footer-container">
+            <p>&copy; Korea Atomic Energy Research Institute. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
