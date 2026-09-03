@@ -156,12 +156,12 @@
       }
     }
 
-    // Master GSAP Timeline (80% scroll distance: 3500px -> 2800px)
+    // Master GSAP Timeline (Doubled reading hold: 9450px, 27.0 Units)
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: '#card-flip-section',
         start: 'top top',
-        end: '+=2800',
+        end: '+=9450',
         pin: '.card-flip-sticky-wrapper',
         scrub: 0.6,
         anticipatePin: 1,
@@ -174,7 +174,7 @@
           let activeLabel = 'EXPERIENCE';
           if (progress >= 0.70) {
             activeLabel = 'ENERGY';
-          } else if (progress >= 0.27) {
+          } else if (progress >= 0.33) {
             activeLabel = 'RESEARCH';
           }
           if (labelEl && labelEl.textContent !== activeLabel) {
@@ -184,43 +184,42 @@
       }
     });
 
-    // ── Timeline Keyframes (Total: 8.0 Units, 80% of original 10.0) ──
+    // ── Timeline Keyframes (Total: 27.0 Units, 2x reading hold with stable flip speed) ──
     // Transition 1 (Screen 1 -> Screen 2): Cards flip 0 -> 180 (pause) -> 360
-    // Reduced initial delay (0.35 unit), tightened card stagger (0.24 unit)
     for (let i = 0; i < 6; i++) {
-      const startTime = 0.35 + i * 0.24;
+      const startTime = 1.00 + i * 0.72;
       const cardTl = gsap.timeline();
-      cardTl.to(cardStates[i], { rotation: 180, duration: 0.48, ease: 'power1.in' })
-            .to(cardStates[i], { rotation: 180, duration: 0.16 }) // brief pause at 180 deg
-            .to(cardStates[i], { rotation: 360, duration: 0.48, ease: 'power1.out' });
+      cardTl.to(cardStates[i], { rotation: 180, duration: 1.44, ease: 'power1.in' })
+            .to(cardStates[i], { rotation: 180, duration: 0.48 }) // readable pause at common back face
+            .to(cardStates[i], { rotation: 360, duration: 1.44, ease: 'power1.out' });
       tl.add(cardTl, startTime);
     }
 
-    // Label Fade 1
+    // Label Fade 1 (EXPERIENCE -> RESEARCH)
     if (labelEl) {
-      tl.to(labelEl, { opacity: 0, duration: 0.3, ease: 'power1.in' }, 1.2)
-        .to(labelEl, { opacity: 1, duration: 0.3, ease: 'power1.out' }, 1.6);
+      tl.to(labelEl, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 3.5)
+        .to(labelEl, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 4.6);
     }
 
     // Transition 2 (Screen 2 -> Screen 3): Cards flip 360 -> 540 (pause) -> 720
-    // Starts after Screen 2 reading hold (1.5 units) at 4.17
+    // Starts after DOUBLED Screen 2 reading hold (6.0 units) at 13.96
     for (let i = 0; i < 6; i++) {
-      const startTime = 4.17 + i * 0.24;
+      const startTime = 13.96 + i * 0.72;
       const cardTl = gsap.timeline();
-      cardTl.to(cardStates[i], { rotation: 540, duration: 0.48, ease: 'power1.in' })
-            .to(cardStates[i], { rotation: 540, duration: 0.16 }) // brief pause at 540 deg
-            .to(cardStates[i], { rotation: 720, duration: 0.48, ease: 'power1.out' });
+      cardTl.to(cardStates[i], { rotation: 540, duration: 1.44, ease: 'power1.in' })
+            .to(cardStates[i], { rotation: 540, duration: 0.48 }) // readable pause at common back face
+            .to(cardStates[i], { rotation: 720, duration: 1.44, ease: 'power1.out' });
       tl.add(cardTl, startTime);
     }
 
-    // Label Fade 2
+    // Label Fade 2 (RESEARCH -> ENERGY)
     if (labelEl) {
-      tl.to(labelEl, { opacity: 0, duration: 0.3, ease: 'power1.in' }, 5.0)
-        .to(labelEl, { opacity: 1, duration: 0.3, ease: 'power1.out' }, 5.4);
+      tl.to(labelEl, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 16.5)
+        .to(labelEl, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 17.6);
     }
 
-    // Screen 3 reading hold dummy anchor to ensure 8.0 units full length
-    tl.to({}, { duration: 1.5 }, 6.49);
+    // Screen 3 reading hold dummy anchor to ensure 27.0 units full length (DOUBLED 6.08 units hold)
+    tl.to({}, { duration: 6.08 }, 20.92);
 
     // Initial render pass
     for (let i = 0; i < 6; i++) {

@@ -34,24 +34,24 @@ window.VideoScrubber = (() => {
       id: '02-atom-to-mri',
       src: 'assets/videos/hero-v2-scrub/02-atom-to-mri.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 5.4 },  // Atom -> MRI transition (doubled to 5.4)
-        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 26.4 }  // MRI completed form hold (doubled to 26.4)
+        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 5.4 },   // Atom -> MRI transition (5.4)
+        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 14.784 } // MRI completed form hold (80% of 18.48 = 14.784)
       ]
     },
     {
       id: '03-mri-to-space',
       src: 'assets/videos/hero-v2-scrub/03-mri-to-space.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },  // MRI -> Space transition (doubled to 6.0)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 30.0 }  // Space completed form hold (doubled to 30.0)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },   // MRI -> Space transition (6.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 21.0 }   // Space completed form hold (70% of 30.0 = 21.0)
       ]
     },
     {
       id: '04-space-to-smr',
       src: 'assets/videos/hero-v2-scrub/04-space-to-smr.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },  // Space -> SMR transition (doubled to 6.0)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 30.0 }  // SMR completed form hold (doubled to 30.0)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },   // Space -> SMR transition (6.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 21.0 }   // SMR completed form hold (70% of 30.0 = 21.0)
       ]
     },
     {
@@ -106,7 +106,7 @@ window.VideoScrubber = (() => {
       { video: 2, minRatio: 0.50, maxRatio: 1.0, chapter: 2, category: 'EXPLORATION', title: '양자빔 활용 과학기술', showDesc: true },
       { video: 3, minRatio: 0.50, maxRatio: 1.0, chapter: 3, category: 'FUTURE ENERGY', title: '선진 원자로 기술개발', showDesc: true }
     ],
-    blacknessRamp: { video: 0, fadeStartRatio: 0.3, fadeEndRatio: 1.0 }
+    blacknessRamp: { video: 0, fadeStartRatio: 0.90, fadeEndRatio: 1.0 }
   };
 
   /* ── State ──────────────────────────────────────────────────── */

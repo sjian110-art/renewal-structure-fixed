@@ -66,17 +66,19 @@
   <div id="bg-layer"></div>
   <div id="video-stage" aria-hidden="true"></div>
   <canvas id="atom-canvas" aria-hidden="true"></canvas>
-  <img id="atom-fallback" src="assets/atom-01-core.png" alt="원자 중심">
+  <img id="atom-fallback" src="assets/atom-01-core.png" alt="원자 중심" hidden>
   <div class="reference-stage">
    <div class="atom-text-box" id="atom-text"><p>KAERI<br>미래를 설계하는 원자력 연구</p><h1>원자에서 시작되는<br>대한민국의 미래</h1></div>
    <div id="left-dial" aria-hidden="true"><svg viewBox="0 0 1920 1024"><circle cx="-570" cy="512" r="676" fill="none" stroke="#777" stroke-width="1.2"/><g id="dial-numbers"></g></svg></div>
    <div id="dial-text-box" inert><span id="dial-category"></span><h2 id="dial-title"></h2><button id="dial-detail-btn">자세히 보기 →</button></div>
    <div id="story-ending"><p>보이지 않는 원자에서 시작된<br>에너지가 우리의 일상을 움직입니다.</p><span>KAERI<br>한국원자력연구원</span></div>
+    <button id="hero-quick-menu-btn" class="hero-quick-menu-btn" aria-label="메뉴 바로가기"><span class="quick-icon" aria-hidden="true">↗</span><span class="quick-text">메뉴 바로가기</span></button>
+  </div>
+  <div id="circular-stage" class="reference-stage">
+   <div id="main-circles-container"></div>
+   <div id="small-circles-container" aria-hidden="true"></div>
   </div>
  </div>
-</section>
-<section id="circular-menu-section" aria-label="주요 서비스 메뉴">
- <div class="menu-pin"><div id="circular-stage" class="reference-stage"><div id="main-circles-container"></div><div id="small-circles-container" aria-hidden="true"></div></div></div>
 </section>
 <section id="card-flip-section" aria-label="KAERI 주요 연구 및 경험">
  <div class="card-flip-sticky-wrapper">
@@ -89,7 +91,43 @@
   </div>
  </div>
 </section>
-<section id="next-section" aria-label="다음 섹션"><!-- 다음 섹션 콘텐츠는 사용자 시안 확정 후 삽입 --></section>
+<section id="last-screen-section" aria-label="마지막 화면">
+ <div class="last-screen-content"></div>
+</section>
+<footer id="site-footer" class="site-footer" role="contentinfo">
+ <div class="footer-container">
+  <div class="footer-left">
+   <img src="assets/logo-on-footer.png" alt="한국원자력연구원 로고" class="footer-logo">
+  </div>
+  <div class="footer-center">
+   <nav class="footer-policy-nav" aria-label="푸터 정책 및 안내 메뉴">
+    <a href="#privacy" class="policy-link is-privacy">개인정보처리방침</a>
+    <span class="policy-divider" aria-hidden="true">|</span>
+    <a href="#email-reject" class="policy-link">이메일무단수집거부</a>
+    <span class="policy-divider" aria-hidden="true">|</span>
+    <a href="#sitemap" class="policy-link">사이트맵</a>
+    <span class="policy-divider" aria-hidden="true">|</span>
+    <a href="#directions" class="policy-link">오시는길</a>
+   </nav>
+   <address class="footer-address">
+    34057 대전광역시 유성구 대덕대로989번길 111 한국원자력연구원 &nbsp;대표전화 : 042-868-2000 &nbsp;팩스 : 042-868-2196
+   </address>
+   <div class="footer-copyright">
+    <p class="copyright-author">DESIGNED &amp; DEVELOPED BY 이지연</p>
+    <p class="copyright-rights">COPYRIGHT &copy; 2026 이지연. ALL RIGHTS RESERVED.</p>
+   </div>
+   <p class="footer-disclaimer">
+    본 사이트는 비상업적 포트폴리오용 리뉴얼 프로젝트입니다. 사용된 로고 및 이미지의 권리는 각 권리자에게 있습니다.
+   </p>
+  </div>
+  <div class="footer-right">
+   <img src="assets/icon-wattana-on-footer.png" alt="웹 접근성 품질인증 마크" class="footer-wa-mark">
+  </div>
+ </div>
+ <button type="button" id="footer-top-btn" class="footer-top-btn" aria-label="페이지 맨 위로 이동">
+  <img src="assets/tab-button-on-footer.png" alt="TOP 버튼" class="top-btn-img">
+ </button>
+</footer>
 </main>
 <div id="toast-modal" role="status" aria-live="polite"></div>
 <noscript>원자 전시와 메뉴를 보려면 JavaScript를 활성화해 주세요.</noscript>

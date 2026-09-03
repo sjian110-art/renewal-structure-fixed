@@ -8,7 +8,7 @@ if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
 }
 const $=s=>document.querySelector(s), clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),smooth=v=>{v=clamp(v);return v*v*(3-2*v);},mix=(a,b,t)=>a+(b-a)*t;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const hero=$('#hero-pin-section'), menu=$('#circular-menu-section'),stage=$('#circular-stage'),bg=$('#bg-layer'),text=$('#atom-text'),dial=$('#left-dial'),desc=$('#dial-text-box'),ending=$('#story-ending');
+const hero=$('#hero-pin-section'), stage=$('#circular-stage'), menu=$('#circular-stage'), bg=$('#bg-layer'), text=$('#atom-text'), dial=$('#left-dial'), desc=$('#dial-text-box'), ending=$('#story-ending'), quickMenuBtn=$('#hero-quick-menu-btn');
 const canvas=$('#atom-canvas'),ctx=canvas.getContext('2d');
 const videoStage=$('#video-stage');
 
@@ -28,7 +28,7 @@ let cumulative=[];
 let LAST=0;
 let endingScrollStart=0;
 let totalHeight=0;
-const ENDING_UNITS = 7.26; // 0.4 video fade out + 0.3 text fade in + 6.0 text hold + 0.24 text fade out + 0.32 gradient & circle entrance (80% transition)
+const ENDING_UNITS = 21.2; // 0.4 video fade + 0.3 text in + 6.0 text hold + 0.3 text out + 1.5 organic bloom & sequential entrance (1.5x) + 10.0 circle hold (2.0x) + 3.0 sequential circle exit (1.5x)
 
 function rebuildTimeline(){
  const videoUnits = VideoScrubber.totalScrollUnits;
@@ -36,7 +36,7 @@ function rebuildTimeline(){
  // Video section: mapped to videoUnits
  const videoScrollPx = videoUnits * unit;
  cumulative.push(cumulative.at(-1) + videoScrollPx);
- // Ending section: 7.26 scroll units
+ // Ending section: 21.2 scroll units
  const endingLength = ENDING_UNITS * unit;
  endingScrollStart = cumulative.at(-1);
  cumulative.push(cumulative.at(-1) + endingLength);
@@ -79,24 +79,58 @@ function blackness(p){
  if(p<=videoEnd) return VideoScrubber.getBlackness(p);
  const overrun = p - videoEnd;
  if(overrun <= 6.7) return 1.0; // Opaque solid black (#000) during video fade & text hold
- return 1 - smooth(clamp((overrun - 6.7) / 0.56));
+ return 1 - smooth(clamp((overrun - 6.7) / 1.5));
 }
 
-function getGradientBackground(t) {
+function getOrganicBloomBackground(t) {
  t = clamp(t);
  if (t <= 0) return 'rgb(0,0,0)';
  if (t >= 1) return 'rgb(255,255,255)';
- 
- // 7 smooth vertical stops from top (0%) to bottom (100%)
- const stops = [0, 0.15, 0.35, 0.5, 0.65, 0.85, 1.0];
- const cssStops = stops.map(y => {
-  // As t increases from 0 to 1, white wave moves from bottom (y=1) up to top (y=0)
-  const raw = (t * 1.7 - (1 - y) * 1.1) / 0.6;
-  const l = smooth(clamp(raw));
-  const val = Math.round(255 * l);
-  return `rgb(${val},${val},${val}) ${Math.round(y * 100)}%`;
- });
- return `linear-gradient(to bottom, ${cssStops.join(', ')})`;
+
+ // 5 organic bloom focal points rising at varied speeds and heights (mimicking ink seepage on paper)
+ const y1 = Math.round(112 - Math.pow(t, 0.85) * 132); // Left-center (28%): early energetic bloom
+ const y2 = Math.round(118 - Math.pow(t, 1.05) * 136); // Right-center (74%): broad gentle bloom
+ const y3 = Math.round(124 - Math.pow(t, 1.15) * 142); // Center (50%): towering smooth dome
+ const y4 = Math.round(115 - Math.pow(t, 0.95) * 128); // Far left (10%): soft subtle flank
+ const y5 = Math.round(120 - Math.pow(t, 1.00) * 132); // Far right (90%): soft subtle flank
+
+ const baseRise = Math.round(112 - t * 120);
+ const baseTop = Math.max(0, baseRise - 16);
+ const baseBot = Math.min(100, baseRise + 18);
+
+ return [
+  `radial-gradient(ellipse 65% 52% at 28% ${y1}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 42%, rgba(255,255,255,0) 72%)`,
+  `radial-gradient(ellipse 72% 56% at 74% ${y2}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.94) 40%, rgba(255,255,255,0) 70%)`,
+  `radial-gradient(ellipse 58% 54% at 50% ${y3}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.96) 45%, rgba(255,255,255,0) 75%)`,
+  `radial-gradient(ellipse 52% 46% at 10% ${y4}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.90) 38%, rgba(255,255,255,0) 68%)`,
+  `radial-gradient(ellipse 55% 48% at 90% ${y5}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.90) 38%, rgba(255,255,255,0) 68%)`,
+  `linear-gradient(to bottom, rgb(0,0,0) 0%, rgb(0,0,0) ${baseTop}%, rgb(255,255,255) ${baseBot}%, rgb(255,255,255) 100%)`
+ ].join(', ');
+}
+
+function getOrganicBloomMask(t) {
+ t = clamp(t);
+ if (t <= 0) return 'none';
+ if (t >= 1) return 'none';
+
+ const y1 = Math.round(112 - Math.pow(t, 0.85) * 132);
+ const y2 = Math.round(118 - Math.pow(t, 1.05) * 136);
+ const y3 = Math.round(124 - Math.pow(t, 1.15) * 142);
+ const y4 = Math.round(115 - Math.pow(t, 0.95) * 128);
+ const y5 = Math.round(120 - Math.pow(t, 1.00) * 132);
+
+ const baseRise = Math.round(112 - t * 120);
+ const baseTop = Math.max(0, baseRise - 16);
+ const baseBot = Math.min(100, baseRise + 18);
+
+ return [
+  `radial-gradient(ellipse 65% 52% at 28% ${y1}%, black 0%, black 42%, transparent 72%)`,
+  `radial-gradient(ellipse 72% 56% at 74% ${y2}%, black 0%, black 40%, transparent 70%)`,
+  `radial-gradient(ellipse 58% 54% at 50% ${y3}%, black 0%, black 45%, transparent 75%)`,
+  `radial-gradient(ellipse 52% 46% at 10% ${y4}%, black 0%, black 38%, transparent 68%)`,
+  `radial-gradient(ellipse 55% 48% at 90% ${y5}%, black 0%, black 38%, transparent 68%)`,
+  `linear-gradient(to bottom, transparent 0%, transparent ${baseTop}%, black ${baseBot}%, black 100%)`
+ ].join(', ');
 }
 
 /* ── Dial & Text (video-aware) ─────────────────────────────── */
@@ -130,13 +164,15 @@ function render(now){
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  const overrun = position - videoEnd;
 
- if (overrun > 6.7) {
-  const gradT = clamp((overrun - 6.7) / 0.56);
-  bg.style.background = getGradientBackground(gradT);
-  // Header theme according to top area brightness
-  const topL = smooth(clamp((gradT * 1.7 - 1.1) / 0.6));
-  document.body.classList.toggle('theme-dark', topL <= 0.45);
-  document.body.classList.toggle('theme-light', topL > 0.45);
+ if (overrun > 6.7 && overrun < 8.2) {
+  const gradT = clamp((overrun - 6.7) / 1.5);
+  bg.style.background = getOrganicBloomBackground(gradT);
+  document.body.classList.toggle('theme-dark', gradT <= 0.65);
+  document.body.classList.toggle('theme-light', gradT > 0.65);
+ } else if (overrun >= 8.2) {
+  bg.style.background = 'rgb(255,255,255)';
+  document.body.classList.remove('theme-dark');
+  document.body.classList.add('theme-light');
  } else {
   const black = blackness(position);
   bg.style.background = `rgb(${Math.round(255*(1-black))},${Math.round(255*(1-black))},${Math.round(255*(1-black))})`;
@@ -164,54 +200,77 @@ function render(now){
   visible(dial,0); visible(desc,0); desc.inert=true;
  }
 
+ // Quick menu jump button (visible ONLY during black video segments, hidden on white atom & ending text)
+ if(quickMenuBtn){
+  let qAlpha = 0;
+  if(position >= 9.0 && overrun <= 0.4){
+   if(position < 9.6) qAlpha = smooth((position - 9.0) / 0.6);
+   else if(overrun > 0.1) qAlpha = 1 - smooth((overrun - 0.1) / 0.3);
+   else qAlpha = 1.0;
+  }
+  visible(quickMenuBtn, qAlpha);
+  quickMenuBtn.style.pointerEvents = qAlpha > 0.5 ? 'auto' : 'none';
+ }
+
  // Ending text (shown ONLY on solid black after video 10 is completely hidden)
  let endingAlpha = 0;
- if (overrun > 0.4 && overrun <= 6.94) {
+ if (overrun > 0.4 && overrun <= 7.0) {
   if (overrun <= 0.7) {
    endingAlpha = smooth((overrun - 0.4) / 0.3); // Fade in (0.4 to 0.7)
   } else if (overrun <= 6.7) {
    endingAlpha = 1.0; // Fixed readable hold section (0.7 to 6.7, 6.0 units hold)
   } else {
-   endingAlpha = 1.0 - smooth((overrun - 6.7) / 0.24); // Fade out (6.7 to 6.94)
+   endingAlpha = 1.0 - smooth((overrun - 6.7) / 0.3); // Fade out (6.7 to 7.0)
   }
  }
  visible(ending, endingAlpha);
 
- // Circular menu section entrance, hold and exit
- const menuRect = menu.getBoundingClientRect();
- const menuScroll = -menuRect.top;
- const holdPx = h * 1.5; // 1.5x viewport height hold section
- const exitPx = h * 1.0; // 1.0x viewport height exit section
+ // Unified Circular menu: 1. Strict white-region mask, 2. Stagger entrance (1.5x), 3. 10.0 Hold (2.0x), 4. Sequential exit (1.5x)
+ if (overrun < 6.7) {
+  visible(stage, 0);
+  stage.style.pointerEvents = 'none';
+  stage.style.maskImage = 'none';
+  stage.style.webkitMaskImage = 'none';
+  renderEntrance(0);
+ } else if (overrun < 8.2) {
+  // Entrance with dynamic organic bloom mask tied to rising white ink seepage (1.5 units)
+  const entranceProgress = clamp((overrun - 6.7) / 1.5);
+  visible(stage, 1);
+  stage.style.pointerEvents = 'auto';
 
- if (menuScroll <= 0) {
-  const entranceProgress = overrun >= 6.7 ? clamp((overrun - 6.7) / 0.56) : 0;
+  // Synchronized organic mask: clips circles strictly above the blooming white area
+  const maskRule = getOrganicBloomMask(entranceProgress);
+  stage.style.maskImage = maskRule;
+  stage.style.webkitMaskImage = maskRule;
+
   renderEntrance(entranceProgress);
- } else if (menuScroll <= holdPx) {
-  // PERFECT PINNED HOLD: All circles 100% visible & fully interactive
+ } else if (overrun <= 18.2) {
+  // PERFECT PINNED HOLD (10.0 units, 2x duration, ~7.0x viewport height): all circles fully landed, mask removed
+  visible(stage, 1);
+  stage.style.pointerEvents = 'auto';
+  stage.style.maskImage = 'none';
+  stage.style.webkitMaskImage = 'none';
   renderEntrance(1.0);
  } else {
-  // Exit after hold section is completed
-  const exitProgress = clamp((menuScroll - holdPx) / exitPx);
+  // Sequential top-to-bottom exit over dedicated 3.0 scroll units (1.5x duration)
+  const exitProgress = clamp((overrun - 18.2) / 3.0);
+  visible(stage, 1);
+  stage.style.maskImage = 'none';
+  stage.style.webkitMaskImage = 'none';
+  stage.style.pointerEvents = exitProgress >= 0.85 ? 'none' : 'auto';
   renderExit(exitProgress);
  }
 
  // Scroll indicator
  const indicator=$('#scroll-indicator');
  const videoScrollHidden = VideoScrubber.isScrollIndicatorHidden(position) || overrun > 0.1;
- const pastMenu = scrollY>menu.offsetTop+holdPx+h*.3;
+ const pastMenu = overrun > 18.0;
  indicator.style.opacity = (pastMenu || videoScrollHidden) ? '0' : '1';
  $('.scroll-text').textContent=position<.8?'스크롤하여 원자의 흐름을 따라가세요.':'스크롤';
 
- // Theme override: when scroll reaches circular menu (white background)
- if(scrollY >= hero.offsetHeight - h - 5){
-  document.body.classList.remove('theme-dark');
-  document.body.classList.add('theme-light');
- }
-
  $('#atom-fallback').hidden=true;
 
- const totalInteractiveHeight = hero.offsetHeight + holdPx + exitPx + h;
- if(scrollY < totalInteractiveHeight || Math.abs(position-target) > .001) raf = requestAnimationFrame(render);
+ if(scrollY < totalHeight || Math.abs(position-target) > .001) raf = requestAnimationFrame(render);
 }
 
 function wake(){if(!raf)raf=requestAnimationFrame(render);}
@@ -285,40 +344,88 @@ function deselect(){
  document.querySelectorAll('.blur-element').forEach(e=>e.classList.remove('is-blurred'));
 }
 
+let sortedMainEntrance = [];
+let sortedMainExit = [];
+let sortedSmallEntrance = [];
+let sortedSmallExit = [];
+
+function setupSequences() {
+ const mainArr = Array.from(els.values());
+ // Entrance: Bottom to top (y descending: 1000 -> 320)
+ sortedMainEntrance = [...mainArr].sort((a, b) => b.y - a.y);
+ // Exit: Top to bottom (y ascending: 320 -> 1000)
+ sortedMainExit = [...mainArr].sort((a, b) => a.y - b.y);
+
+ // Small circles
+ sortedSmallEntrance = [...small].sort((a, b) => b.y - a.y);
+ sortedSmallExit = [...small].sort((a, b) => a.y - b.y);
+}
+
 function renderEntrance(t){
  t = clamp(t);
- els.forEach(e => {
-  const yNorm = clamp(e.y / 1024); // 0 (top) ~ 1 (bottom)
-  const startT = (1 - yNorm) * 0.40;
-  const endT = startT + 0.60;
-  const itemProgress = smooth(clamp((t - startT) / (endT - startT)));
-  const startOffsetY = 280 + (e.index % 5) * 60;
-  e.exit.style.transform = `translateY(${Math.round((1 - itemProgress) * startOffsetY)}px)`;
-  e.exit.style.opacity = String(itemProgress);
+ if(!sortedMainEntrance.length) setupSequences();
+ const dur = 0.32; // Each circle's movement duration
+ const mainCount = sortedMainEntrance.length;
+ sortedMainEntrance.forEach((e, idx) => {
+  const startT = (idx / (mainCount - 1)) * (1 - dur); // Distinct start: 0.0 -> 0.68
+  const progress = smooth(clamp((t - startT) / dur));
+  const startOffsetY = 300 + (idx % 4) * 35;
+  e.exit.style.transform = `translateY(${Math.round((1 - progress) * startOffsetY)}px)`;
+  e.exit.style.opacity = String(clamp(progress * 1.8));
  });
- small.forEach((e, i) => {
-  const yNorm = clamp(e.y / 1024);
-  const startT = (1 - yNorm) * 0.40;
-  const endT = startT + 0.60;
-  const itemProgress = smooth(clamp((t - startT) / (endT - startT)));
-  const startOffsetY = 320 + (i % 4) * 70;
-  e.exit.style.transform = `translateY(${Math.round((1 - itemProgress) * startOffsetY)}px)`;
-  e.exit.style.opacity = String(itemProgress);
+
+ const smallCount = sortedSmallEntrance.length;
+ sortedSmallEntrance.forEach((e, idx) => {
+  const startT = (idx / (smallCount - 1)) * (1 - dur);
+  const progress = smooth(clamp((t - startT) / dur));
+  const startOffsetY = 340 + (idx % 4) * 30;
+  e.exit.style.transform = `translateY(${Math.round((1 - progress) * startOffsetY)}px)`;
+  e.exit.style.opacity = String(clamp(progress * 1.8));
  });
 }
 
 function renderExit(p){
- els.forEach(e=>{e.exit.style.transform=`translateY(${-p*(220+(e.index%5)*65)}px)`;e.exit.style.opacity=1-smooth((p-.45)/.55);});
- small.forEach((e,i)=>{e.exit.style.transform=`translateY(${-p*(310+i%4*70)}px)`;e.exit.style.opacity=1-smooth((p-.4)/.6);});
+ p = clamp(p);
+ if(!sortedMainExit.length) setupSequences();
+ const dur = 0.32;
+ const mainCount = sortedMainExit.length;
+ sortedMainExit.forEach((e, idx) => {
+  const startP = (idx / (mainCount - 1)) * (1 - dur); // Distinct start: 0.0 -> 0.68
+  const rawP = clamp((p - startP) / dur);
+  const itemP = rawP * rawP * (2.4 - 1.4 * rawP); // Smooth start, accelerating exit
+  const travelY = e.y + 240;
+  e.exit.style.transform = `translateY(${-Math.round(itemP * travelY)}px)`;
+  e.exit.style.opacity = String(1 - smooth((itemP - 0.45) / 0.55));
+ });
+
+ const smallCount = sortedSmallExit.length;
+ sortedSmallExit.forEach((e, idx) => {
+  const startP = (idx / (smallCount - 1)) * (1 - dur);
+  const rawP = clamp((p - startP) / dur);
+  const itemP = rawP * rawP * (2.4 - 1.4 * rawP);
+  const travelY = e.y + 260;
+  e.exit.style.transform = `translateY(${-Math.round(itemP * travelY)}px)`;
+  e.exit.style.opacity = String(1 - smooth((itemP - 0.40) / 0.60));
+ });
 }
 menu.addEventListener('click',e=>{if(!e.target.closest('.menu-circle'))deselect();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const old=selected;deselect();if(old)els.get(old).button.focus({preventScroll:true});}});addEventListener('scroll',()=>{if(selected&&Math.abs(scrollY-selectedAtY)>.5)deselect();wake();},{passive:true});
-function openMenu(id){deselect();window.scrollTo({top:menu.offsetTop,behavior:'auto'});wake();if(id&&els.has(id)){select(id);els.get(id).button.focus({preventScroll:true});}}
-$('#hamburger-btn').addEventListener('click',()=>openMenu());$('.lang-btn').addEventListener('click',()=>toast('영문 페이지는 준비 중입니다.'));$('#dial-detail-btn').addEventListener('click',()=>toast('해당 연구 상세 페이지는 아직 연결되지 않았습니다.'));document.querySelectorAll('.shortcut-sns-widget button').forEach(b=>b.addEventListener('click',()=>toast(b.getAttribute('aria-label')+' 링크는 아직 연결되지 않았습니다.')));
+function openMenu(id){
+ deselect();
+ const targetScroll = cumulative[1] + (8.2 + 5.0) * unit;
+ window.scrollTo({top: targetScroll, behavior:'auto'});
+ wake();
+ if(id&&els.has(id)){select(id);els.get(id).button.focus({preventScroll:true});}
+}
+$('#hamburger-btn').addEventListener('click',()=>openMenu());if(quickMenuBtn)quickMenuBtn.addEventListener('click',()=>openMenu());$('.lang-btn').addEventListener('click',()=>toast('영문 페이지는 준비 중입니다.'));$('#dial-detail-btn').addEventListener('click',()=>toast('해당 연구 상세 페이지는 아직 연결되지 않았습니다.'));document.querySelectorAll('.shortcut-sns-widget button').forEach(b=>b.addEventListener('click',()=>toast(b.getAttribute('aria-label')+' 링크는 아직 연결되지 않았습니다.')));
+const topBtn = $('#footer-top-btn');if(topBtn){topBtn.addEventListener('click',()=>{deselect();window.scrollTo({top:0,behavior:reduced.matches?'auto':'smooth'});wake();});}
+document.querySelectorAll('.footer-policy-nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();toast(a.textContent+' 페이지는 준비 중입니다.');});});
 document.querySelectorAll('.header a,.shortcut-bar a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const hash=a.getAttribute('href');if(hash==='#home'){goFrame(0);return;}openMenu(hash.replace('#menu-','').replace('#',''));}));
 addEventListener('resize',()=>{setupSize();position=target=getPosition(scrollY);wake();});document.addEventListener('visibilitychange',()=>{lastTime=0;wake();});reduced.addEventListener('change',wake);
 
 /* ── Init ───────────────────────────────────────────────────── */
 VideoScrubber.init(videoStage, bg);
+visible(stage, 0);
+renderEntrance(0);
 setupSize();position=target=getPosition(scrollY);wake();
 
 // Re-sync timeline once video metadata is loaded (durations may differ from defaults)
