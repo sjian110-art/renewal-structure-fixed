@@ -44,12 +44,26 @@
     </header>
 
     <aside class="shortcut-bar blur-element" aria-label="빠른 바로가기">
-      <div class="shortcut-tab-widget"><img src="assets/icon-screen-tab-light.png" alt="" width="57" height="148"><div class="tab-links">
-        <a href="#home" aria-label="첫 화면"></a><a href="#menu-rnd" aria-label="연구개발"></a><a href="#menu-safety" aria-label="안전정보"></a><a href="#menu-customer" aria-label="고객참여"></a>
-      </div></div>
-      <div class="shortcut-sns-widget"><img src="assets/icon-sns-tab-light.png" alt="" width="38" height="92"><div class="tab-links">
-        <button aria-label="블로그"></button><button aria-label="페이스북"></button><button aria-label="인스타그램"></button><button aria-label="유튜브"></button>
-      </div></div>
+      <nav class="shortcut-nav-widget" aria-label="주요 메뉴 바로가기">
+        <a href="#home" class="shortcut-nav-item" aria-label="첫 화면 이동">홈</a>
+        <a href="#menu-rnd" class="shortcut-nav-item" aria-label="연구개발 메뉴 바로가기">연구</a>
+        <a href="#menu-safety" class="shortcut-nav-item" aria-label="안전정보 메뉴 바로가기">안전</a>
+        <a href="#menu-customer" class="shortcut-nav-item" aria-label="고객참여 메뉴 바로가기">참여</a>
+      </nav>
+      <div class="shortcut-sns-widget" aria-label="소셜 미디어 바로가기">
+        <button type="button" class="shortcut-sns-btn" aria-label="유튜브">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </button>
+        <button type="button" class="shortcut-sns-btn" aria-label="블로그">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        </button>
+        <button type="button" class="shortcut-sns-btn" aria-label="페이스북">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </button>
+        <button type="button" class="shortcut-sns-btn" aria-label="인스타그램">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </button>
+      </div>
     </aside>
     <!-- Scroll Down Indicator (hero-main.png Specification) -->
     <div class="scroll-indicator blur-element" id="scroll-indicator">
@@ -71,8 +85,8 @@
    <div class="atom-text-box" id="atom-text"><p>KAERI<br>미래를 설계하는 원자력 연구</p><h1>원자에서 시작되는<br>대한민국의 미래</h1></div>
     <div id="left-dial" class="left-dial" aria-hidden="true">
       <svg viewBox="0 0 1920 1024">
-        <circle cx="-580" cy="512" r="690" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1.2"/>
-        <circle cx="110" cy="512" r="4" fill="#ffffff"/>
+        <circle cx="-580" cy="512" r="690" fill="none" stroke="rgba(255,255,255,0.40)" stroke-width="1.8"/>
+        <circle cx="110" cy="512" r="4" fill="#ffffff" stroke="#ffffff" stroke-width="1.2"/>
         <g id="dial-rotator"></g>
       </svg>
     </div>
@@ -80,7 +94,7 @@
       <div class="dial-glow-bg" aria-hidden="true"></div>
       <span id="dial-category" class="dial-category"></span>
       <h2 id="dial-title" class="dial-title"></h2>
-      <button type="button" id="dial-detail-btn" class="dial-detail-btn">자세히 보기 →</button>
+      <button type="button" id="dial-detail-btn" class="dial-detail-btn"><span>자세히 보기</span> <span class="detail-arrow" aria-hidden="true">&rarr;</span></button>
     </div>
    <div id="story-ending"><p>보이지 않는 원자에서 시작된<br>에너지가 우리의 일상을 움직입니다.</p><span>KAERI<br>한국원자력연구원</span></div>
     <button id="hero-quick-menu-btn" class="hero-quick-menu-btn" aria-label="메뉴 바로가기"><span class="quick-icon" aria-hidden="true">↗</span><span class="quick-text">메뉴 바로가기</span></button>
@@ -95,10 +109,13 @@
  <div class="card-flip-sticky-wrapper">
   <div class="card-flip-container">
    <div class="card-grid" id="card-grid"></div>
-   <div class="card-flip-bottom-bar">
-    <div class="card-flip-line"></div>
-    <div class="card-flip-label" id="card-flip-label">EXPERIENCE</div>
-   </div>
+    <div class="card-flip-bottom-bar">
+     <div class="card-flip-line"></div>
+     <div class="card-flip-label-wrap" id="card-flip-label-wrap">
+      <span class="card-flip-label" id="card-flip-label">EXPERIENCE</span>
+      <span class="card-flip-page" id="card-flip-page">01 / 03</span>
+     </div>
+    </div>
   </div>
  </div>
 </section>
@@ -108,7 +125,7 @@
 <footer id="site-footer" class="site-footer" role="contentinfo">
  <div class="footer-container">
   <div class="footer-left">
-   <img src="assets/logo-on-footer.png" alt="한국원자력연구원 로고" class="footer-logo">
+   <img src="assets/logo-on-dark.png" alt="한국원자력연구원" class="footer-logo">
   </div>
   <div class="footer-center">
    <nav class="footer-policy-nav" aria-label="푸터 정책 및 안내 메뉴">
@@ -140,6 +157,35 @@
  </button>
 </footer>
 </main>
+<div id="dial-modal" class="dial-modal" role="dialog" aria-modal="true" aria-labelledby="dial-modal-title" hidden>
+ <div class="dial-modal-backdrop" id="dial-modal-backdrop"></div>
+ <div class="dial-modal-container">
+  <div class="dial-modal-header">
+   <span class="dial-modal-category" id="dial-modal-category">01. LIFE SCIENCE</span>
+   <button type="button" class="dial-modal-close" id="dial-modal-close" aria-label="연구 소개 패널 닫기">&times;</button>
+  </div>
+  <div class="dial-modal-body">
+   <div class="dial-modal-image-wrap">
+    <img id="dial-modal-img" src="assets/story-05-medical-device.png" alt="연구 시각화 이미지" class="dial-modal-img">
+   </div>
+   <div class="dial-modal-content">
+    <h2 class="dial-modal-title" id="dial-modal-title">방사선 융합기술 개발</h2>
+    <p class="dial-modal-desc" id="dial-modal-desc">방사선 및 동위원소 기술을 바이오·의료 및 신소재 분야에 융합하여 국민 건강 증진과 삶의 질 향상에 기여합니다. 정밀 진단과 치료를 위한 방사성의약품 및 융합 바이오 소재 연구를 지속적으로 추진하고 있습니다.</p>
+    <div class="dial-modal-examples">
+     <h4 class="dial-examples-heading">주요 연구 및 활용 분야</h4>
+     <ul class="dial-examples-list" id="dial-examples-list">
+      <li><span class="example-bullet">•</span><span class="example-text">방사성동위원소 기반 정밀 진단·치료 기술 연구</span></li>
+      <li><span class="example-bullet">•</span><span class="example-text">방사선 조사 기술을 활용한 신소재 및 바이오 융합 연구</span></li>
+     </ul>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
 <div id="toast-modal" role="status" aria-live="polite"></div>
+<div id="custom-cursor" class="custom-cursor" aria-hidden="true">
+ <div class="cursor-ring"></div>
+ <div class="cursor-dot"></div>
+</div>
 <noscript>원자 전시와 메뉴를 보려면 JavaScript를 활성화해 주세요.</noscript>
 </body></html>

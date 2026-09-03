@@ -44,9 +44,10 @@ if (dialRotator) {
     // Number text: 00., 01., 02., 03.
     const text = document.createElementNS(ns, 'text');
     const tx = DIAL_CX + DIAL_R_TEXT * Math.cos(rad);
-    const ty = DIAL_CY + DIAL_R_TEXT * Math.sin(rad) + 12; // visual baseline adjustment
+    const ty = DIAL_CY + DIAL_R_TEXT * Math.sin(rad);
     text.setAttribute('x', String(tx));
     text.setAttribute('y', String(ty));
+    text.setAttribute('dominant-baseline', 'central');
     text.setAttribute('font-family', "'Outfit', sans-serif");
     text.setAttribute('font-size', '56');
     text.setAttribute('font-weight', '200');
@@ -67,7 +68,7 @@ let cumulative=[];
 let LAST=0;
 let endingScrollStart=0;
 let totalHeight=0;
-const ENDING_UNITS = 19.2; // 0.4 video fade + 0.3 text in + 6.0 text hold + 0.3 text out + 1.5 organic bloom & sequential entrance (1.5x) + 8.0 circle hold (80% of 10.0 = 8.0) + 3.0 sequential circle exit (1.5x)
+const ENDING_UNITS = 16.533; // 0.4 video fade + 0.3 text in + 6.0 text hold + 0.3 text out + 1.5 organic bloom & sequential entrance (1.5x) + 5.333 circle hold (8.0 / 1.5 = 5.333) + 3.0 sequential circle exit (1.5x)
 
 function rebuildTimeline(){
  const videoUnits = VideoScrubber.totalScrollUnits;
@@ -75,7 +76,7 @@ function rebuildTimeline(){
  // Video section: mapped to videoUnits
  const videoScrollPx = videoUnits * unit;
  cumulative.push(cumulative.at(-1) + videoScrollPx);
- // Ending section: 19.2 scroll units
+ // Ending section: 16.533 scroll units
  const endingLength = ENDING_UNITS * unit;
  endingScrollStart = cumulative.at(-1);
  cumulative.push(cumulative.at(-1) + endingLength);
@@ -117,8 +118,8 @@ function blackness(p){
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  if(p<=videoEnd) return VideoScrubber.getBlackness(p);
  const overrun = p - videoEnd;
- if(overrun <= 6.7) return 1.0; // Opaque solid black (#000) during video fade & text hold
- return 1 - smooth(clamp((overrun - 6.7) / 1.5));
+ if(overrun <= 7.05) return 1.0; // Opaque solid black (#000) during hand hold, video fade & text hold
+ return 1 - smooth(clamp((overrun - 7.05) / 1.5));
 }
 
 function getOrganicBloomBackground(t) {
@@ -181,22 +182,26 @@ function drawDialVideo(p){
    dialRotator.setAttribute('transform', `rotate(${state.rotationDeg}, ${DIAL_CX}, ${DIAL_CY})`);
   }
 
-  // Update active highlight and rotation orientation for each number
+  // Update active highlight and screen-relative rotation orientation for each number
   dialNodes.forEach((node) => {
    const currentAngleOnScreen = node.baseDeg + state.rotationDeg;
    const distToZero = Math.abs(currentAngleOnScreen);
    const isSelected = distToZero < 4.0;
    const selectWeight = smooth(clamp(1 - distToZero / 14.0));
 
+   // Screen-relative target angle: curves along arc when far, smoothly reaches exactly 0deg (horizontal) at selector
+   const targetScreenAngle = currentAngleOnScreen * (1 - selectWeight);
+   const localTextRotation = targetScreenAngle - state.rotationDeg;
+
+   node.text.setAttribute('transform', `rotate(${localTextRotation}, ${node.tx}, ${node.ty})`);
+
    if (isSelected) {
     node.text.setAttribute('fill', '#ffffff');
-    node.text.setAttribute('font-size', '66');
+    node.text.setAttribute('font-size', '76');
     node.text.setAttribute('font-weight', '300');
     node.text.setAttribute('opacity', '1.0');
     node.circle.setAttribute('stroke', '#ffffff');
     node.circle.setAttribute('fill', '#ffffff');
-    // Upright alignment for selected number
-    node.text.setAttribute('transform', `rotate(${node.baseDeg * (1 - selectWeight)}, ${node.tx}, ${node.ty})`);
    } else {
     node.text.setAttribute('fill', 'rgba(255,255,255,0.35)');
     node.text.setAttribute('font-size', '54');
@@ -204,16 +209,18 @@ function drawDialVideo(p){
     node.text.setAttribute('opacity', String(0.35 + selectWeight * 0.45));
     node.circle.setAttribute('stroke', 'rgba(255,255,255,0.45)');
     node.circle.setAttribute('fill', 'none');
-    node.text.setAttribute('transform', `rotate(${node.baseDeg}, ${node.tx}, ${node.ty})`);
    }
   });
 
-  if (state.descAlpha > 0.01) {
-   $('#dial-category').textContent = state.category || '';
-   $('#dial-title').textContent = state.title || '';
-   visible(desc, state.descAlpha);
-   desc.inert = state.descAlpha < 0.5;
-  } else {
+   if (state.descAlpha > 0.01) {
+    $('#dial-category').textContent = state.category || '';
+    $('#dial-title').textContent = state.title || '';
+    if (state.category === 'LIFE SCIENCE') currentDialIndex = 0;
+    else if (state.category === 'EXPLORATION') currentDialIndex = 1;
+    else if (state.category === 'FUTURE ENERGY') currentDialIndex = 2;
+    visible(desc, state.descAlpha);
+    desc.inert = state.descAlpha < 0.5;
+   } else {
    visible(desc, 0);
    desc.inert = true;
   }
@@ -236,12 +243,12 @@ function render(now){
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  const overrun = position - videoEnd;
 
- if (overrun > 6.7 && overrun < 8.2) {
-  const gradT = clamp((overrun - 6.7) / 1.5);
+ if (overrun > 7.05 && overrun < 8.55) {
+  const gradT = clamp((overrun - 7.05) / 1.5);
   bg.style.background = getOrganicBloomBackground(gradT);
   document.body.classList.toggle('theme-dark', gradT <= 0.65);
   document.body.classList.toggle('theme-light', gradT > 0.65);
- } else if (overrun >= 8.2) {
+ } else if (overrun >= 8.55) {
   bg.style.background = 'rgb(255,255,255)';
   document.body.classList.remove('theme-dark');
   document.body.classList.add('theme-light');
@@ -275,38 +282,49 @@ function render(now){
  // Quick menu jump button (visible ONLY during black video segments, hidden on white atom & ending text)
  if(quickMenuBtn){
   let qAlpha = 0;
-  if(position >= 9.0 && overrun <= 0.4){
+  if(position >= 9.0 && overrun <= 0.3){
    if(position < 9.6) qAlpha = smooth((position - 9.0) / 0.6);
-   else if(overrun > 0.1) qAlpha = 1 - smooth((overrun - 0.1) / 0.3);
+   else if(overrun > 0.05) qAlpha = 1 - smooth((overrun - 0.05) / 0.25);
    else qAlpha = 1.0;
   }
   visible(quickMenuBtn, qAlpha);
   quickMenuBtn.style.pointerEvents = qAlpha > 0.5 ? 'auto' : 'none';
  }
 
- // Ending text (shown ONLY on solid black after video 10 is completely hidden)
+ // Ending text (#story-ending):
+ // 1. Hand hold: overrun 0.0 ~ 0.3
+ // 2. Hand fadeout to black: overrun 0.3 ~ 0.8
+ // 3. Text entrance on solid black: overrun 0.8 ~ 1.05 (0.25 units, opacity 0->1, translateY 8px->0px)
+ // 4. Text hold: overrun 1.05 ~ 7.05 (6.0 units fixed readable hold)
+ // 5. Text fadeout: overrun 7.05 ~ 7.35 (0.3 units)
  let endingAlpha = 0;
- if (overrun > 0.4 && overrun <= 7.0) {
-  if (overrun <= 0.7) {
-   endingAlpha = smooth((overrun - 0.4) / 0.3); // Fade in (0.4 to 0.7)
-  } else if (overrun <= 6.7) {
-   endingAlpha = 1.0; // Fixed readable hold section (0.7 to 6.7, 6.0 units hold)
+ let endingY = 0;
+ if (overrun > 0.8 && overrun <= 7.35) {
+  if (overrun <= 1.05) {
+   const progress = smooth((overrun - 0.8) / 0.25);
+   endingAlpha = progress;
+   endingY = (1 - progress) * 8;
+  } else if (overrun <= 7.05) {
+   endingAlpha = 1.0;
+   endingY = 0;
   } else {
-   endingAlpha = 1.0 - smooth((overrun - 6.7) / 0.3); // Fade out (6.7 to 7.0)
+   endingAlpha = 1.0 - smooth((overrun - 7.05) / 0.3);
+   endingY = 0;
   }
  }
  visible(ending, endingAlpha);
+ if (ending) ending.style.transform = `translate(-50%, calc(-50% + ${endingY}px))`;
 
- // Unified Circular menu: 1. Strict white-region mask, 2. Stagger entrance (1.5x), 3. 10.0 Hold (2.0x), 4. Sequential exit (1.5x)
- if (overrun < 6.7) {
+ // Unified Circular menu: 1. Strict white-region mask, 2. Stagger entrance (1.5x), 3. Hold (5.333), 4. Sequential exit (3.0)
+ if (overrun < 7.05) {
   visible(stage, 0);
   stage.style.pointerEvents = 'none';
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
   renderEntrance(0);
- } else if (overrun < 8.2) {
+ } else if (overrun < 8.55) {
   // Entrance with dynamic organic bloom mask tied to rising white ink seepage (1.5 units)
-  const entranceProgress = clamp((overrun - 6.7) / 1.5);
+  const entranceProgress = clamp((overrun - 7.05) / 1.5);
   visible(stage, 1);
   stage.style.pointerEvents = 'auto';
 
@@ -316,8 +334,8 @@ function render(now){
   stage.style.webkitMaskImage = maskRule;
 
   renderEntrance(entranceProgress);
- } else if (overrun <= 16.2) {
-  // PERFECT PINNED HOLD (8.0 units, 80% of 10.0 = 8.0, ~5.6x viewport height): all circles fully landed, mask removed
+ } else if (overrun <= 13.883) {
+  // PERFECT PINNED HOLD (5.333 units, ~3.7x viewport height): all circles fully landed, mask removed
   visible(stage, 1);
   stage.style.pointerEvents = 'auto';
   stage.style.maskImage = 'none';
@@ -325,7 +343,7 @@ function render(now){
   renderEntrance(1.0);
  } else {
   // Sequential top-to-bottom exit over dedicated 3.0 scroll units (1.5x duration)
-  const exitProgress = clamp((overrun - 16.2) / 3.0);
+  const exitProgress = clamp((overrun - 13.883) / 3.0);
   visible(stage, 1);
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
@@ -333,14 +351,12 @@ function render(now){
   renderExit(exitProgress);
  }
 
- // Scroll indicator
- const indicator=$('#scroll-indicator');
- const videoScrollHidden = VideoScrubber.isScrollIndicatorHidden(position) || overrun > 0.1;
- const pastMenu = overrun > 16.0;
- indicator.style.opacity = (pastMenu || videoScrollHidden) ? '0' : '1';
- $('.scroll-text').textContent=position<.8?'스크롤하여 원자의 흐름을 따라가세요.':'스크롤';
+  // Unified Section Scroll Indicator
+  updateScrollIndicator();
 
- $('#atom-fallback').hidden=true;
+  $('#atom-fallback').hidden=true;
+
+  if(typeof updateCursorFromLoop === 'function') updateCursorFromLoop();
 
  if(scrollY < totalHeight || Math.abs(position-target) > .001) raf = requestAnimationFrame(render);
 }
@@ -358,7 +374,7 @@ items.forEach((item,index)=>{
  const circle=document.createElement('div');circle.className='menu-circle';circle.dataset.id=item.id;circle.style.setProperty('--hover',item.hoverColor);circle.style.setProperty('--ink',item.textColor);circle.style.setProperty('--title-size',Math.min(23,item.baseSize*.10)+'px');circle.style.setProperty('--desc-size',Math.min(17,item.baseSize*.075)+'px');
  const button=document.createElement('button');button.className='circle-select';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label',item.name);button.innerHTML=`<span class="circle-title">${item.name}</span><span class="circle-desc">${item.hoverText}</span>`;
  const detail=document.createElement('button');detail.className='circle-detail-btn';detail.textContent='자세히 보기 →';detail.tabIndex=-1;detail.setAttribute('aria-label',item.name+' 자세히 보기');detail.addEventListener('click',()=>toast(item.name+' 페이지는 아직 연결되지 않았습니다.'));
- const elRecord={wrap,exit,float:floatEl,circle,button,detail,index,isHovered:false};
+ const elRecord={wrap,exit,float:floatEl,circle,button,detail,index,x:item.x,y:item.y,size:item.baseSize,id:item.id,isHovered:false};
  button.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){e.preventDefault();button.focus({preventScroll:true});}});
  button.addEventListener('click',()=>selected===item.id?deselect():select(item.id));
  const setHover=on=>{elRecord.isHovered=on;circle.classList.toggle('is-hovered',on);if(on){floatEl.classList.add('is-paused');}else if(selected!==item.id){floatEl.classList.remove('is-paused');}};
@@ -423,25 +439,37 @@ let sortedSmallExit = [];
 
 function setupSequences() {
  const mainArr = Array.from(els.values());
- // Entrance: Bottom to top (y descending: 1000 -> 320)
- sortedMainEntrance = [...mainArr].sort((a, b) => b.y - a.y);
- // Exit: Top to bottom (y ascending: 320 -> 1000)
- sortedMainExit = [...mainArr].sort((a, b) => a.y - b.y);
+ // Entrance: Bottom to top (y descending: 1000 -> 320). If y close, sort by x
+ sortedMainEntrance = [...mainArr].sort((a, b) => {
+  if (Math.abs(b.y - a.y) > 2) return b.y - a.y;
+  return a.x - b.x;
+ });
+ // Exit: Top to bottom (y ascending: 320 -> 1000). If y close, sort by x
+ sortedMainExit = [...mainArr].sort((a, b) => {
+  if (Math.abs(a.y - b.y) > 2) return a.y - b.y;
+  return a.x - b.x;
+ });
 
  // Small circles
- sortedSmallEntrance = [...small].sort((a, b) => b.y - a.y);
- sortedSmallExit = [...small].sort((a, b) => a.y - b.y);
+ sortedSmallEntrance = [...small].sort((a, b) => {
+  if (Math.abs(b.y - a.y) > 2) return b.y - a.y;
+  return a.x - b.x;
+ });
+ sortedSmallExit = [...small].sort((a, b) => {
+  if (Math.abs(a.y - b.y) > 2) return a.y - b.y;
+  return a.x - b.x;
+ });
 }
 
 function renderEntrance(t){
  t = clamp(t);
- if(!sortedMainEntrance.length) setupSequences();
+ if(!sortedMainEntrance.length || typeof sortedMainEntrance[0].y !== 'number') setupSequences();
  const dur = 0.32; // Each circle's movement duration
  const mainCount = sortedMainEntrance.length;
  sortedMainEntrance.forEach((e, idx) => {
   const startT = (idx / (mainCount - 1)) * (1 - dur); // Distinct start: 0.0 -> 0.68
   const progress = smooth(clamp((t - startT) / dur));
-  const startOffsetY = 300 + (idx % 4) * 35;
+  const startOffsetY = Math.max(280, (1024 - e.y) + (e.size || 160) * 0.5 + 80);
   e.exit.style.transform = `translateY(${Math.round((1 - progress) * startOffsetY)}px)`;
   e.exit.style.opacity = String(clamp(progress * 1.8));
  });
@@ -450,7 +478,7 @@ function renderEntrance(t){
  sortedSmallEntrance.forEach((e, idx) => {
   const startT = (idx / (smallCount - 1)) * (1 - dur);
   const progress = smooth(clamp((t - startT) / dur));
-  const startOffsetY = 340 + (idx % 4) * 30;
+  const startOffsetY = Math.max(300, (1024 - e.y) + 100);
   e.exit.style.transform = `translateY(${Math.round((1 - progress) * startOffsetY)}px)`;
   e.exit.style.opacity = String(clamp(progress * 1.8));
  });
@@ -458,14 +486,14 @@ function renderEntrance(t){
 
 function renderExit(p){
  p = clamp(p);
- if(!sortedMainExit.length) setupSequences();
+ if(!sortedMainExit.length || typeof sortedMainExit[0].y !== 'number') setupSequences();
  const dur = 0.32;
  const mainCount = sortedMainExit.length;
  sortedMainExit.forEach((e, idx) => {
   const startP = (idx / (mainCount - 1)) * (1 - dur); // Distinct start: 0.0 -> 0.68
   const rawP = clamp((p - startP) / dur);
   const itemP = rawP * rawP * (2.4 - 1.4 * rawP); // Smooth start, accelerating exit
-  const travelY = e.y + 240;
+  const travelY = e.y + (e.size || 160) + 120;
   e.exit.style.transform = `translateY(${-Math.round(itemP * travelY)}px)`;
   e.exit.style.opacity = String(1 - smooth((itemP - 0.45) / 0.55));
  });
@@ -475,7 +503,7 @@ function renderExit(p){
   const startP = (idx / (smallCount - 1)) * (1 - dur);
   const rawP = clamp((p - startP) / dur);
   const itemP = rawP * rawP * (2.4 - 1.4 * rawP);
-  const travelY = e.y + 260;
+  const travelY = e.y + 120;
   e.exit.style.transform = `translateY(${-Math.round(itemP * travelY)}px)`;
   e.exit.style.opacity = String(1 - smooth((itemP - 0.40) / 0.60));
  });
@@ -483,22 +511,433 @@ function renderExit(p){
 menu.addEventListener('click',e=>{if(!e.target.closest('.menu-circle'))deselect();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const old=selected;deselect();if(old)els.get(old).button.focus({preventScroll:true});}});addEventListener('scroll',()=>{if(selected&&Math.abs(scrollY-selectedAtY)>.5)deselect();wake();},{passive:true});
 function openMenu(id){
  deselect();
- const targetScroll = cumulative[1] + (8.2 + 4.0) * unit;
+ const targetScroll = cumulative[1] + (8.55 + 2.667) * unit;
  window.scrollTo({top: targetScroll, behavior:'auto'});
  wake();
  if(id&&els.has(id)){select(id);els.get(id).button.focus({preventScroll:true});}
 }
-$('#hamburger-btn').addEventListener('click',()=>openMenu());if(quickMenuBtn)quickMenuBtn.addEventListener('click',()=>openMenu());$('.lang-btn').addEventListener('click',()=>toast('영문 페이지는 준비 중입니다.'));$('#dial-detail-btn').addEventListener('click',()=>toast('해당 연구 상세 페이지는 아직 연결되지 않았습니다.'));document.querySelectorAll('.shortcut-sns-widget button').forEach(b=>b.addEventListener('click',()=>toast(b.getAttribute('aria-label')+' 링크는 아직 연결되지 않았습니다.')));
+/* ── Dial Detail Modal Controller ───────────────────────────── */
+const DIAL_DETAILS = [
+  {
+    category: '01. LIFE SCIENCE',
+    title: '방사선 융합기술 개발',
+    image: 'assets/story-05-medical-device.png',
+    imageAlt: '방사선 및 바이오 의료 융합기술 시각화 그래픽',
+    desc: '방사선 및 동위원소 기술을 바이오·의료 및 첨단 신소재 분야에 융합하여 국민 건강 증진과 삶의 질 향상에 기여합니다. 정밀 진단과 질환 치료를 위한 방사성의약품 및 방사선 생명공학 연구를 지속적으로 추진하고 있습니다.',
+    examples: [
+      '방사성동위원소 기반 정밀 진단·치료 기술 연구',
+      '방사선 조사 기술을 활용한 바이오·신소재 융합 연구'
+    ]
+  },
+  {
+    category: '02. EXPLORATION',
+    title: '양자빔 활용 과학기술',
+    image: 'assets/story-08-planets.png',
+    imageAlt: '우주 및 극한 환경 양자빔 연구 시각화 그래픽',
+    desc: '중성자, 양성자, 전자 등 첨단 양자빔을 활용하여 미세 물질의 특성을 정밀 분석하고 기초·응용 과학기술의 지평을 넓힙니다. 우주 및 극한 환경을 모사한 물질 탐구와 차세대 부품 성능 검증을 종합적으로 지원합니다.',
+    examples: [
+      '양자빔 및 중성자를 이용한 극한 환경 나노 구조 분석',
+      '우주·항공용 극한 내방사선 부품 검증 및 신소재 평가'
+    ]
+  },
+  {
+    category: '03. FUTURE ENERGY',
+    title: '선진 원자로 기술개발',
+    image: 'assets/story-12-reactor.png',
+    imageAlt: '혁신 소형모듈원자로 SMR 연구 시각화 그래픽',
+    desc: '탄소중립과 미래 에너지 자립을 선도하기 위해 혁신적인 소형모듈원자로(SMR) 및 다목적 선진 원자로를 개발합니다. 높은 고유 안전성과 유연성을 바탕으로 전력 생산뿐만 아니라 열 공급, 청정 수소 생산 등 다양한 에너지 수요에 대응합니다.',
+    examples: [
+      '혁신 소형모듈원자로(SMR) 핵심 기술 개발 및 안전성 검증',
+      '청정 수소 생산 및 다목적 산업용 고온 열 공급 기술'
+    ]
+  }
+];
+
+let currentDialIndex = 0;
+let lastFocusedElement = null;
+
+function openDialModal(idx) {
+  const detail = DIAL_DETAILS[idx] || DIAL_DETAILS[0];
+  const modal = $('#dial-modal');
+  if (!modal) return;
+
+  $('#dial-modal-category').textContent = detail.category;
+  $('#dial-modal-title').textContent = detail.title;
+  $('#dial-modal-desc').textContent = detail.desc;
+  
+  const img = $('#dial-modal-img');
+  if (img) {
+    img.src = detail.image;
+    img.alt = detail.imageAlt;
+  }
+
+  const list = $('#dial-examples-list');
+  if (list) {
+    list.innerHTML = detail.examples.map(ex => `
+      <li>
+        <span class="example-bullet">•</span>
+        <span class="example-text">${ex}</span>
+      </li>
+    `).join('');
+  }
+
+  lastFocusedElement = document.activeElement;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => {
+    modal.classList.add('is-open');
+    const closeBtn = $('#dial-modal-close');
+    if (closeBtn) closeBtn.focus();
+  });
+}
+
+function closeDialModal() {
+  const modal = $('#dial-modal');
+  if (!modal || modal.hidden) return;
+
+  modal.classList.remove('is-open');
+  document.body.style.overflow = '';
+
+  setTimeout(() => {
+    modal.hidden = true;
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }, 280);
+}
+
+$('#hamburger-btn').addEventListener('click',()=>openMenu());if(quickMenuBtn)quickMenuBtn.addEventListener('click',()=>openMenu());$('.lang-btn').addEventListener('click',()=>toast('영문 페이지는 준비 중입니다.'));
+const dialDetailBtn = $('#dial-detail-btn');
+if (dialDetailBtn) {
+  dialDetailBtn.addEventListener('click', () => {
+    openDialModal(currentDialIndex);
+  });
+}
+const modalCloseBtn = $('#dial-modal-close');
+if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeDialModal);
+const modalBackdrop = $('#dial-modal-backdrop');
+if (modalBackdrop) modalBackdrop.addEventListener('click', closeDialModal);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = $('#dial-modal');
+    if (modal && !modal.hidden) {
+      closeDialModal();
+    }
+  }
+});
+document.querySelectorAll('.shortcut-sns-widget button').forEach(b=>b.addEventListener('click',()=>toast(b.getAttribute('aria-label')+' 링크는 아직 연결되지 않았습니다.')));
 const topBtn = $('#footer-top-btn');if(topBtn){topBtn.addEventListener('click',()=>{deselect();window.scrollTo({top:0,behavior:reduced.matches?'auto':'smooth'});wake();});}
 document.querySelectorAll('.footer-policy-nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();toast(a.textContent+' 페이지는 준비 중입니다.');});});
 document.querySelectorAll('.header a,.shortcut-bar a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const hash=a.getAttribute('href');if(hash==='#home'){goFrame(0);return;}openMenu(hash.replace('#menu-','').replace('#',''));}));
-addEventListener('resize',()=>{setupSize();position=target=getPosition(scrollY);wake();});document.addEventListener('visibilitychange',()=>{lastTime=0;wake();});reduced.addEventListener('change',wake);
+/* ── Unified Global Scroll Indicator Controller ───────────── */
+const indicatorEl = $('#scroll-indicator');
+const indicatorTextEl = indicatorEl ? indicatorEl.querySelector('.scroll-text') : null;
+
+function updateScrollIndicator() {
+  if (!indicatorEl) return;
+
+  const scroll = window.scrollY || document.documentElement.scrollTop;
+  const heroHeight = hero ? hero.offsetHeight : 20000;
+  const footer = $('#site-footer');
+
+  // ⑦ Footer: completely hidden
+  if (footer) {
+    const fRect = footer.getBoundingClientRect();
+    if (fRect.top <= window.innerHeight * 0.92) {
+      indicatorEl.classList.remove('is-visible');
+      return;
+    }
+  }
+
+  // ⑥ Card Flip Section (scrollY >= heroHeight)
+  if (scroll >= heroHeight - 20) {
+    const cardState = window.cardIndicatorState;
+    if (cardState && cardState.visible) {
+      if (indicatorTextEl) {
+        indicatorTextEl.textContent = cardState.text;
+        indicatorTextEl.style.display = cardState.text ? 'inline-block' : 'none';
+      }
+      indicatorEl.classList.add('is-visible');
+    } else {
+      indicatorEl.classList.remove('is-visible');
+    }
+    return;
+  }
+
+  // ① ~ ⑤ Hero Section Timeline (based on position & overrun)
+  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
+  const overrun = position - videoEnd;
+
+  let isVisible = false;
+  let text = '';
+  let showText = true;
+
+  if (position <= 0.85) {
+    // ① First white atom main
+    isVisible = true;
+    text = '스크롤하여 원자의 흐름을 따라가세요.';
+  } else if (overrun <= 0) {
+    // Video region
+    const dialState = VideoScrubber.getDialState(position);
+    if (dialState && dialState.visible && dialState.descAlpha > 0.5) {
+      // ② MRI · Space · SMR dial hold section
+      isVisible = true;
+      text = '스크롤';
+    } else {
+      // ③ Transition between atoms, or hands touch & absorption: hidden
+      isVisible = false;
+    }
+  } else if (overrun <= 0.8) {
+    // ③ Hand hold & fadeout: hidden
+    isVisible = false;
+  } else if (overrun > 1.05 && overrun <= 7.05) {
+    // ④ Ending text (#story-ending) hold section: arrow only!
+    isVisible = true;
+    text = '';
+    showText = false;
+  } else if (overrun > 7.05 && overrun < 8.55) {
+    // Ink bloom & menu entrance: hidden
+    isVisible = false;
+  } else if (overrun >= 8.55 && overrun <= 13.883) {
+    // ⑤ Circular menu hold section
+    isVisible = true;
+    text = '스크롤하여 연구 이야기 더 보기';
+  } else {
+    // Menu exit transition (overrun > 13.883): hidden
+    isVisible = false;
+  }
+
+  if (indicatorTextEl) {
+    indicatorTextEl.textContent = text;
+    indicatorTextEl.style.display = showText && text ? 'inline-block' : 'none';
+  }
+
+  if (isVisible) {
+    indicatorEl.classList.add('is-visible');
+  } else {
+    indicatorEl.classList.remove('is-visible');
+  }
+}
+
+window.updateScrollIndicator = updateScrollIndicator;
+
+addEventListener('scroll', () => {
+  updateScrollIndicator();
+}, { passive: true });
+
+addEventListener('resize',()=>{setupSize();position=target=getPosition(scrollY);updateScrollIndicator();wake();});
+document.addEventListener('visibilitychange',()=>{lastTime=0;wake();});
+reduced.addEventListener('change',wake);
+
+/* ── Custom Cursor Controller ───────────────────────────────── */
+let updateCursorFromLoop = null;
+
+function initCustomCursor() {
+  const cursor = $('#custom-cursor');
+  if (!cursor) return;
+  const dot = cursor.querySelector('.cursor-dot');
+  const ring = cursor.querySelector('.cursor-ring');
+  if (!dot || !ring) return;
+
+  let mouseX = -100, mouseY = -100;
+  let ringX = -100, ringY = -100;
+  let isHovered = false;
+  let isPressed = false;
+  let isVisible = false;
+  let cursorRaf = 0;
+
+  // 2D Geometric ink bloom containment check
+  function isInsideInkBloom(mx, my, t) {
+    if (t <= 0.01) return false;
+    if (t >= 0.98) return true;
+
+    const nx = (mx / Math.max(1, w)) * 100;
+    const ny = (my / Math.max(1, h)) * 100;
+
+    // Base rising line
+    const baseRise = 112 - t * 120;
+    if (ny >= baseRise) return true;
+
+    // 5 Bloom ellipses
+    const y1 = 112 - Math.pow(t, 0.85) * 132;
+    const y2 = 118 - Math.pow(t, 1.05) * 136;
+    const y3 = 124 - Math.pow(t, 1.15) * 142;
+    const y4 = 115 - Math.pow(t, 0.95) * 128;
+    const y5 = 120 - Math.pow(t, 1.00) * 132;
+
+    const ellipses = [
+      { cx: 28, cy: y1, rx: 32.5, ry: 26 },
+      { cx: 74, cy: y2, rx: 36.0, ry: 28 },
+      { cx: 50, cy: y3, rx: 29.0, ry: 27 },
+      { cx: 10, cy: y4, rx: 26.0, ry: 23 },
+      { cx: 90, cy: y5, rx: 27.5, ry: 24 }
+    ];
+
+    for (const e of ellipses) {
+      const dx = (nx - e.cx) / e.rx;
+      const dy = (ny - e.cy) / e.ry;
+      if (dx * dx + dy * dy <= 1.0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function checkPointIsDark(mx, my, pos) {
+    const scroll = window.scrollY || document.documentElement.scrollTop;
+    const heroHeight = hero ? hero.offsetHeight : 20000;
+
+    if (scroll < heroHeight) {
+      const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
+      const overrun = pos - videoEnd;
+
+      // 1. Video region: use exact blackness calculation (white atom: blackness ~0, black videos: blackness ~1)
+      if (overrun <= 0) {
+        const blackness = VideoScrubber.getBlackness(pos);
+        return blackness > 0.45;
+      }
+
+      // 2. Black ending text region (overrun 0.0 ~ 7.05)
+      if (overrun <= 7.05) {
+        return true;
+      }
+
+      // 3. Organic ink bloom region (overrun 7.05 ~ 8.55)
+      if (overrun < 8.55) {
+        const t = clamp((overrun - 7.05) / 1.5);
+        const inWhiteBloom = isInsideInkBloom(mx, my, t);
+        return !inWhiteBloom;
+      }
+
+      // 4. Circular menu stage (overrun >= 8.55)
+      return false;
+    } else {
+      // 5. Card flip & Footer
+      const footer = $('#site-footer');
+      if (footer) {
+        const fRect = footer.getBoundingClientRect();
+        if (my >= fRect.top && my <= fRect.bottom && mx >= fRect.left && mx <= fRect.right) {
+          return true; // Dark charcoal footer
+        }
+      }
+      return false; // White cards & last screen
+    }
+  }
+
+  function updateHoverState() {
+    if (!isVisible || mouseX < 0 || mouseY < 0) return;
+    const target = document.elementFromPoint(mouseX, mouseY);
+    if (!target) return;
+
+    const isInput = target.closest('input, textarea, [contenteditable="true"], select');
+    if (isInput) {
+      cursor.classList.add('is-hidden');
+      document.body.classList.add('native-cursor-active');
+      return;
+    } else {
+      cursor.classList.remove('is-hidden');
+      document.body.classList.remove('native-cursor-active');
+    }
+
+    const isInteractive = target.closest('a, button, [role="button"], .circle-select, .policy-link, .hero-quick-menu-btn, .footer-top-btn, .card-btn, #hamburger-btn, .lang-btn, .shortcut-tab-widget a, .shortcut-sns-widget button');
+    const isSmallDeco = target.closest('.small-position, .small-dot, .small-push, .small-float');
+
+    const shouldHover = Boolean(isInteractive && !isSmallDeco);
+    if (shouldHover !== isHovered) {
+      isHovered = shouldHover;
+      cursor.classList.toggle('is-hovered', isHovered);
+    }
+  }
+
+  function updateColorState() {
+    if (!isVisible || mouseX < 0 || mouseY < 0) return;
+    const isDark = checkPointIsDark(mouseX, mouseY, position);
+    cursor.classList.toggle('theme-dark', isDark);
+    cursor.classList.toggle('theme-light', !isDark);
+  }
+
+  updateCursorFromLoop = () => {
+    if (!isVisible) return;
+    updateHoverState();
+    updateColorState();
+  };
+
+  function renderCursor() {
+    cursorRaf = 0;
+    if (!isVisible) return;
+
+    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+
+    ringX += (mouseX - ringX) * 0.28;
+    ringY += (mouseY - ringY) * 0.28;
+    ring.style.transform = `translate(${Math.round(ringX * 10) / 10}px, ${Math.round(ringY * 10) / 10}px) translate(-50%, -50%)${isPressed ? (isHovered ? ' scale(0.88)' : ' scale(0.80)') : ''}`;
+
+    updateColorState();
+
+    if (Math.abs(mouseX - ringX) > 0.1 || Math.abs(mouseY - ringY) > 0.1) {
+      cursorRaf = requestAnimationFrame(renderCursor);
+    }
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+
+    if (!isVisible) {
+      isVisible = true;
+      ringX = mouseX;
+      ringY = mouseY;
+      cursor.classList.add('is-visible');
+      cursor.classList.remove('is-hidden');
+    }
+
+    updateHoverState();
+
+    if (!cursorRaf) {
+      cursorRaf = requestAnimationFrame(renderCursor);
+    }
+  }, { passive: true });
+
+  window.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+      isPressed = true;
+      cursor.classList.add('is-pressed');
+      if (!cursorRaf) cursorRaf = requestAnimationFrame(renderCursor);
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    isPressed = false;
+    cursor.classList.remove('is-pressed');
+    if (!cursorRaf) cursorRaf = requestAnimationFrame(renderCursor);
+  });
+
+  document.addEventListener('mouseleave', () => {
+    isVisible = false;
+    cursor.classList.remove('is-visible');
+    cursor.classList.add('is-hidden');
+  });
+
+  document.addEventListener('mouseenter', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    ringX = mouseX;
+    ringY = mouseY;
+    isVisible = true;
+    cursor.classList.add('is-visible');
+    cursor.classList.remove('is-hidden');
+    updateHoverState();
+    if (!cursorRaf) cursorRaf = requestAnimationFrame(renderCursor);
+  });
+}
 
 /* ── Init ───────────────────────────────────────────────────── */
 VideoScrubber.init(videoStage, bg);
 visible(stage, 0);
 renderEntrance(0);
 setupSize();position=target=getPosition(scrollY);wake();
+initCustomCursor();
 
 // Re-sync timeline once video metadata is loaded (durations may differ from defaults)
 const checkVideoReady = setInterval(()=>{

@@ -79,21 +79,23 @@ window.VideoScrubber = (() => {
       id: '08-hands-touch',
       src: 'assets/videos/hero-v2-scrub/08-hands-touch.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Hands touch (doubled to 3.6)
+        { ratioStart: 0.0, ratioEnd: 0.20, scrollWeight: 0.8 },  // Hands approach
+        { ratioStart: 0.20, ratioEnd: 0.80, scrollWeight: 3.6 }, // Touch & spark flash peak to settle (1.5x+ stretch)
+        { ratioStart: 0.80, ratioEnd: 1.00, scrollWeight: 0.8 }  // Handshake settle
       ]
     },
     {
       id: '09-handshake',
       src: 'assets/videos/hero-v2-scrub/09-handshake.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Handshake (doubled to 3.6)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Handshake (3.6)
       ]
     },
     {
       id: '10-energy-transfer',
       src: 'assets/videos/hero-v2-scrub/10-energy-transfer.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Energy transfer & final absorption (doubled to 4.8)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Energy transfer & final absorption (4.8)
       ]
     }
   ];
@@ -193,12 +195,14 @@ window.VideoScrubber = (() => {
       const video = document.createElement('video');
       video.muted = true;
       video.playsInline = true;
-      video.preload = 'auto';
-      video.src = cfg.src;
       video.setAttribute('playsinline', '');
       video.setAttribute('muted', '');
       video.removeAttribute('controls');
       video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;will-change:opacity;z-index:0;visibility:hidden;';
+      video._hasSrc = false;
+      video._isLoaded = false;
+      video._isSeeking = false;
+      video._pendingSeekTime = -1;
 
       video.addEventListener('loadedmetadata', () => {
         if (video.duration && !isNaN(video.duration) && video.duration > 0) {
@@ -207,17 +211,28 @@ window.VideoScrubber = (() => {
         }
       });
 
+      video.addEventListener('loadeddata', () => {
+        video._isLoaded = true;
+        // When initial video (index 0) finishes loading, preload next video (index 1) in background
+        if (i === 0 && videoEls[1]) {
+          ensureVideoLoaded(1, false);
+        }
+      });
+
       video.addEventListener('canplay', () => {
-        if (seekVideoIdx === i && seekTarget >= 0) {
-          applySeek();
+        if (video._pendingSeekTime >= 0) {
+          const t = video._pendingSeekTime;
+          video._pendingSeekTime = -1;
+          seekVideo(i, t);
         }
       });
 
       video.addEventListener('seeked', () => {
-        if (seekVideoIdx === i && pendingSeekTime >= 0) {
-          const t = pendingSeekTime;
-          pendingSeekTime = -1;
-          performSeek(video, t);
+        video._isSeeking = false;
+        if (video._pendingSeekTime >= 0 && Math.abs(video.currentTime - video._pendingSeekTime) > 0.003) {
+          const nextT = video._pendingSeekTime;
+          video._pendingSeekTime = -1;
+          seekVideo(i, nextT);
         }
       });
 
@@ -225,16 +240,30 @@ window.VideoScrubber = (() => {
         const status = document.getElementById('video-load-status');
         if (status) {
           status.hidden = false;
-          status.textContent = '영상 파일을 불러오지 못했습니다: ' + cfg.src;
+          status.textContent = '영상을 불러오는 데 문제가 발생했습니다. 새로고침을 시도해 주세요.';
         }
-        console.warn(`[VideoScrubber] Error loading video ${i}: ${cfg.src}`, e);
+        console.warn(`[VideoScrubber] Error loading video ${i} (${cfg.src}):`, e);
       });
 
       videoEls.push(video);
       container.appendChild(video);
-
-      try { video.load(); } catch (err) { /* ignore */ }
     });
+
+    // Priority load only the first video (01-atom-formation) at entry
+    ensureVideoLoaded(0, true);
+  }
+
+  function ensureVideoLoaded(idx, priority = false) {
+    if (idx < 0 || idx >= videoEls.length) return;
+    const video = videoEls[idx];
+    if (!video._hasSrc) {
+      video._hasSrc = true;
+      video.src = VIDEOS[idx].src;
+      video.preload = priority ? 'auto' : 'metadata';
+      try { video.load(); } catch (err) { /* ignore */ }
+    } else if (priority && video.preload !== 'auto') {
+      video.preload = 'auto';
+    }
   }
 
   function resize() {
@@ -247,74 +276,156 @@ window.VideoScrubber = (() => {
     if (!ready || !container) return;
 
     const videoPos = position - VIDEO_START;
-    if (videoPos < -0.3 || videoPos > totalScrollUnits + 0.45) {
+
+    // Hand hold and smooth fadeout to black:
+    // videoPos > totalScrollUnits:
+    // 0.0 ~ 0.3 units (0.3 screen height): Hold orange hand at last frame (opacity 1.0)
+    // 0.3 ~ 0.8 units (0.5 screen height): Fade out orange hand (opacity 1.0 -> 0.0)
+    // > 0.8 units: Video completely hidden
+    if (videoPos > totalScrollUnits) {
+      const overrun = videoPos - totalScrollUnits;
+      if (overrun <= 0.8) {
+        const lastIdx = videoEls.length - 1;
+        ensureVideoLoaded(lastIdx, true);
+        const lastDur = durations[lastIdx] || 8.0;
+        seekVideo(lastIdx, Math.max(0, lastDur - 0.001));
+
+        let handOpacity = 1.0;
+        if (overrun > 0.3) {
+          handOpacity = 1 - smooth((overrun - 0.3) / 0.5);
+        }
+
+        container.style.opacity = String(handOpacity);
+        container.style.visibility = handOpacity > 0.001 ? 'visible' : 'hidden';
+
+        videoEls.forEach((v, i) => {
+          if (i === lastIdx) {
+            v.style.zIndex = '2';
+            v.style.visibility = 'visible';
+            v.style.opacity = '1';
+          } else {
+            v.style.zIndex = '0';
+            v.style.visibility = 'hidden';
+            v.style.opacity = '0';
+          }
+        });
+        currentVideoIndex = lastIdx;
+        return;
+      } else {
+        container.style.opacity = '0';
+        container.style.visibility = 'hidden';
+        hideAll();
+        currentVideoIndex = -1;
+        return;
+      }
+    }
+
+    if (videoPos < -0.3) {
+      container.style.opacity = '0';
+      container.style.visibility = 'hidden';
       hideAll();
       currentVideoIndex = -1;
       return;
     }
 
-    const { videoIndex, targetTime } = getVideoTimeAndIndex(videoPos);
+    container.style.opacity = '1';
+    container.style.visibility = 'visible';
 
-    switchToVideo(videoIndex);
-    container.style.opacity = String(getVideoOpacity(position));
+    const { videoIndex, targetTime, targetRatio } = getVideoTimeAndIndex(videoPos);
 
-    seekVideoIdx = videoIndex;
-    seekTarget = targetTime;
-    applySeek();
+    // Ensure active video is loaded with high priority
+    ensureVideoLoaded(videoIndex, true);
 
-    preloadAdjacent(videoIndex);
+    // Seek active video
+    seekVideo(videoIndex, targetTime);
+
+    // Render active videos with dual-buffer blending on specific boundary transitions (1->2, 2->3)
+    renderActiveVideos(videoIndex, targetRatio, targetTime);
+
+    preloadAdjacent(videoIndex, targetRatio);
   }
 
-  function performSeek(video, targetTime) {
-    if (!video || video.readyState < 1) return;
-    if (Math.abs(video.currentTime - targetTime) > 0.002) {
-      try {
-        video.currentTime = targetTime;
-      } catch (err) {
-        /* ignore */
+  function seekVideo(idx, targetTime) {
+    if (idx < 0 || idx >= videoEls.length) return;
+    const video = videoEls[idx];
+    if (!video || !video._hasSrc || video.readyState < 1) {
+      if (video) video._pendingSeekTime = targetTime;
+      return;
+    }
+
+    const dur = video.duration || durations[idx] || 8.0;
+    const t = clamp(targetTime, 0, dur - 0.001);
+
+    video._pendingSeekTime = t;
+    if (!video._isSeeking && !video.seeking) {
+      if (Math.abs(video.currentTime - t) > 0.002) {
+        try {
+          video._isSeeking = true;
+          video.currentTime = t;
+        } catch (err) {}
       }
     }
   }
 
-  function applySeek() {
-    if (seekVideoIdx < 0 || seekTarget < 0) return;
-    const video = videoEls[seekVideoIdx];
-    if (!video || video.readyState < 1) return;
-
-    const dur = video.duration || durations[seekVideoIdx] || 8.0;
-    const t = clamp(seekTarget, 0, dur - 0.001);
-
-    pendingSeekTime = t;
-    if (!video.seeking) {
-      performSeek(video, t);
-    }
-  }
-
-  function switchToVideo(idx) {
-    if (currentVideoIndex === idx) return;
-    const prevIdx = currentVideoIndex;
-    currentVideoIndex = idx;
+  function renderActiveVideos(videoIndex, targetRatio, targetTime) {
+    // Boundary transition 1: 02-atom-to-mri (idx 1) -> 03-mri-to-space (idx 2)
+    const isBoundary1 = (videoIndex === 2 && targetRatio < 0.06);
+    // Boundary transition 2: 03-mri-to-space (idx 2) -> 04-space-to-smr (idx 3)
+    const isBoundary2 = (videoIndex === 3 && targetRatio < 0.06);
 
     videoEls.forEach((v, i) => {
-      if (i === idx) {
-        v.style.zIndex = '2';
-        v.style.visibility = 'visible';
-        v.style.opacity = '1';
-      } else if (i === prevIdx) {
-        v.style.zIndex = '1';
-        requestAnimationFrame(() => {
-          if (currentVideoIndex !== prevIdx) {
-            v.style.opacity = '0';
-            v.style.visibility = 'hidden';
-            v.style.zIndex = '0';
-          }
-        });
+      if (isBoundary1) {
+        if (i === 2) {
+          const blend = smooth(targetRatio / 0.06);
+          v.style.zIndex = '2';
+          v.style.visibility = 'visible';
+          v.style.opacity = String(blend);
+        } else if (i === 1) {
+          // Keep previous MRI video showing its clean end frame underneath
+          ensureVideoLoaded(1, true);
+          const prevDur = durations[1] || 8.0;
+          seekVideo(1, prevDur - 0.01);
+          v.style.zIndex = '1';
+          v.style.visibility = 'visible';
+          v.style.opacity = '1';
+        } else {
+          v.style.zIndex = '0';
+          v.style.visibility = 'hidden';
+          v.style.opacity = '0';
+        }
+      } else if (isBoundary2) {
+        if (i === 3) {
+          const blend = smooth(targetRatio / 0.06);
+          v.style.zIndex = '2';
+          v.style.visibility = 'visible';
+          v.style.opacity = String(blend);
+        } else if (i === 2) {
+          // Keep previous Space video showing its clean end frame underneath
+          ensureVideoLoaded(2, true);
+          const prevDur = durations[2] || 8.0;
+          seekVideo(2, prevDur - 0.01);
+          v.style.zIndex = '1';
+          v.style.visibility = 'visible';
+          v.style.opacity = '1';
+        } else {
+          v.style.zIndex = '0';
+          v.style.visibility = 'hidden';
+          v.style.opacity = '0';
+        }
       } else {
-        v.style.zIndex = '0';
-        v.style.opacity = '0';
-        v.style.visibility = 'hidden';
+        if (i === videoIndex) {
+          v.style.zIndex = '2';
+          v.style.visibility = 'visible';
+          v.style.opacity = '1';
+        } else {
+          v.style.zIndex = '0';
+          v.style.visibility = 'hidden';
+          v.style.opacity = '0';
+        }
       }
     });
+
+    currentVideoIndex = videoIndex;
   }
 
   function hideAll() {
@@ -325,27 +436,22 @@ window.VideoScrubber = (() => {
     });
   }
 
-  function preloadAdjacent(idx) {
-    videoEls.forEach((v, i) => {
-      if (i === idx || i === idx - 1 || i === idx + 1) {
-        v.preload = 'auto';
-      }
-    });
-
-    // Boundary pre-seeking for seamless forward/reverse transitions
+  function preloadAdjacent(idx, ratio = 0.5) {
+    // Intelligent progressive preload of forward, backward, and next-ahead video
     if (idx + 1 < videoEls.length) {
-      const nextVid = videoEls[idx + 1];
-      if (nextVid && nextVid.readyState >= 1 && !nextVid.seeking && nextVid.currentTime > 0.1) {
-        try { nextVid.currentTime = 0; } catch (e) {}
+      ensureVideoLoaded(idx + 1, ratio > 0.5);
+      if (ratio > 0.85) {
+        seekVideo(idx + 1, 0);
       }
     }
+    if (idx + 2 < videoEls.length && ratio > 0.7) {
+      ensureVideoLoaded(idx + 2, false);
+    }
     if (idx - 1 >= 0) {
-      const prevVid = videoEls[idx - 1];
-      if (prevVid && prevVid.readyState >= 1 && !prevVid.seeking) {
-        const prevDur = prevVid.duration || durations[idx - 1] || 8.0;
-        if (prevVid.currentTime < prevDur - 0.2) {
-          try { prevVid.currentTime = Math.max(0, prevDur - 0.01); } catch (e) {}
-        }
+      ensureVideoLoaded(idx - 1, ratio < 0.5);
+      if (ratio < 0.15) {
+        const prevDur = durations[idx - 1] || 8.0;
+        seekVideo(idx - 1, Math.max(0, prevDur - 0.01));
       }
     }
   }
@@ -364,10 +470,8 @@ window.VideoScrubber = (() => {
       return smooth(t);
     }
 
-    if (videoPos < totalScrollUnits) return 1;
-
-    const overrun = videoPos - totalScrollUnits;
-    return 1 - smooth(clamp(overrun / 0.5));
+    // All video segments and subsequent ending sequence are solid black (#000)
+    return 1.0;
   }
 
   /* ── Dial & Text State (scroll-linked rotation 00 -> 01 -> 02 -> 03) ────── */

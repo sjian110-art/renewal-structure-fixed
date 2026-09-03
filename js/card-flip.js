@@ -65,8 +65,16 @@
   function initCardFlip() {
     const section = document.querySelector('#card-flip-section');
     const grid = document.querySelector('#card-grid');
+    const labelWrapEl = document.querySelector('#card-flip-label-wrap');
     const labelEl = document.querySelector('#card-flip-label');
+    const pageEl = document.querySelector('#card-flip-page');
     if (!section || !grid || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+    const LABEL_PAGES = {
+      'EXPERIENCE': '01 / 03',
+      'RESEARCH': '02 / 03',
+      'ENERGY': '03 / 03'
+    };
 
     // Render 6 cards
     grid.innerHTML = '';
@@ -156,38 +164,74 @@
       }
     }
 
-    // Master GSAP Timeline (Doubled reading hold: 9450px, 27.0 Units)
+    // Master GSAP Timeline (Total: 32.0 Units = 11200px, 6.0U / 2100px hold for all 3 screens)
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: '#card-flip-section',
         start: 'top top',
-        end: '+=9450',
+        end: '+=11200',
         pin: '.card-flip-sticky-wrapper',
         scrub: 0.6,
-        anticipatePin: 1,
-        onUpdate: () => {
-          for (let i = 0; i < 6; i++) {
-            updateCardRender(i);
+        anticipatePin: 1
+      },
+      onUpdate: () => {
+        // Called on every frame during timeline interpolation even when scroll stops
+        for (let i = 0; i < 6; i++) {
+          updateCardRender(i);
+        }
+        // Label synchronization tied directly to timeline time
+        const curTime = tl.time();
+        let activeLabel = 'EXPERIENCE';
+        if (curTime >= 22.0) {
+          activeLabel = 'ENERGY';
+        } else if (curTime >= 9.0) {
+          activeLabel = 'RESEARCH';
+        }
+        if (labelEl && labelEl.textContent !== activeLabel) {
+          labelEl.textContent = activeLabel;
+          if (pageEl) {
+            pageEl.textContent = LABEL_PAGES[activeLabel] || '01 / 03';
           }
-          // Deterministic label update
-          const progress = tl.progress();
-          let activeLabel = 'EXPERIENCE';
-          if (progress >= 0.70) {
-            activeLabel = 'ENERGY';
-          } else if (progress >= 0.33) {
-            activeLabel = 'RESEARCH';
-          }
-          if (labelEl && labelEl.textContent !== activeLabel) {
-            labelEl.textContent = activeLabel;
-          }
+        }
+
+        // Section Scroll Indicator state for Card Screens:
+        // Screen 1 hold: 0.00 <= curTime <= 6.00 -> '스크롤하여 다음 이야기'
+        // Screen 2 hold: 12.96 <= curTime <= 18.96 -> '스크롤하여 다음 이야기'
+        // Screen 3 hold: 25.92 <= curTime <= 32.00 -> '스크롤하여 아래로'
+        // Flipping transitions: hidden
+        let cardIndicatorVisible = false;
+        let cardIndicatorText = '';
+        if (curTime >= 0 && curTime <= 6.00) {
+          cardIndicatorVisible = true;
+          cardIndicatorText = '스크롤하여 다음 이야기';
+        } else if (curTime >= 12.96 && curTime <= 18.96) {
+          cardIndicatorVisible = true;
+          cardIndicatorText = '스크롤하여 다음 이야기';
+        } else if (curTime >= 25.92 && curTime <= 32.00) {
+          cardIndicatorVisible = true;
+          cardIndicatorText = '스크롤하여 아래로';
+        } else {
+          cardIndicatorVisible = false;
+        }
+
+        window.cardIndicatorState = {
+          active: true,
+          visible: cardIndicatorVisible,
+          text: cardIndicatorText
+        };
+
+        if (typeof window.updateScrollIndicator === 'function') {
+          window.updateScrollIndicator();
         }
       }
     });
 
-    // ── Timeline Keyframes (Total: 27.0 Units, 2x reading hold with stable flip speed) ──
+    // ── Timeline Keyframes (Total: 32.0 Units, 2100px reading hold for all 3 screens) ──
+    // Screen 1 (EXPERIENCE) reading hold: 0.00 ~ 6.00 (6.00 Units = 2100px)
+
     // Transition 1 (Screen 1 -> Screen 2): Cards flip 0 -> 180 (pause) -> 360
     for (let i = 0; i < 6; i++) {
-      const startTime = 1.00 + i * 0.72;
+      const startTime = 6.00 + i * 0.72;
       const cardTl = gsap.timeline();
       cardTl.to(cardStates[i], { rotation: 180, duration: 1.44, ease: 'power1.in' })
             .to(cardStates[i], { rotation: 180, duration: 0.48 }) // readable pause at common back face
@@ -195,16 +239,19 @@
       tl.add(cardTl, startTime);
     }
 
+    const fadeTarget = labelWrapEl || labelEl;
+
     // Label Fade 1 (EXPERIENCE -> RESEARCH)
-    if (labelEl) {
-      tl.to(labelEl, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 3.5)
-        .to(labelEl, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 4.6);
+    if (fadeTarget) {
+      tl.to(fadeTarget, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 8.5)
+        .to(fadeTarget, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 9.6);
     }
 
+    // Screen 2 (RESEARCH) reading hold: 12.96 ~ 18.96 (6.00 Units = 2100px)
+
     // Transition 2 (Screen 2 -> Screen 3): Cards flip 360 -> 540 (pause) -> 720
-    // Starts after DOUBLED Screen 2 reading hold (6.0 units) at 13.96
     for (let i = 0; i < 6; i++) {
-      const startTime = 13.96 + i * 0.72;
+      const startTime = 18.96 + i * 0.72;
       const cardTl = gsap.timeline();
       cardTl.to(cardStates[i], { rotation: 540, duration: 1.44, ease: 'power1.in' })
             .to(cardStates[i], { rotation: 540, duration: 0.48 }) // readable pause at common back face
@@ -213,13 +260,13 @@
     }
 
     // Label Fade 2 (RESEARCH -> ENERGY)
-    if (labelEl) {
-      tl.to(labelEl, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 16.5)
-        .to(labelEl, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 17.6);
+    if (fadeTarget) {
+      tl.to(fadeTarget, { opacity: 0, duration: 0.8, ease: 'power1.in' }, 21.5)
+        .to(fadeTarget, { opacity: 1, duration: 0.8, ease: 'power1.out' }, 22.6);
     }
 
-    // Screen 3 reading hold dummy anchor to ensure 27.0 units full length (DOUBLED 6.08 units hold)
-    tl.to({}, { duration: 6.08 }, 20.92);
+    // Screen 3 (ENERGY) reading hold: 25.92 ~ 32.00 (6.08 Units = 2128px)
+    tl.to({}, { duration: 6.08 }, 25.92);
 
     // Initial render pass
     for (let i = 0; i < 6; i++) {
