@@ -69,8 +69,19 @@
   <img id="atom-fallback" src="assets/atom-01-core.png" alt="원자 중심" hidden>
   <div class="reference-stage">
    <div class="atom-text-box" id="atom-text"><p>KAERI<br>미래를 설계하는 원자력 연구</p><h1>원자에서 시작되는<br>대한민국의 미래</h1></div>
-   <div id="left-dial" aria-hidden="true"><svg viewBox="0 0 1920 1024"><circle cx="-570" cy="512" r="676" fill="none" stroke="#777" stroke-width="1.2"/><g id="dial-numbers"></g></svg></div>
-   <div id="dial-text-box" inert><span id="dial-category"></span><h2 id="dial-title"></h2><button id="dial-detail-btn">자세히 보기 →</button></div>
+    <div id="left-dial" class="left-dial" aria-hidden="true">
+      <svg viewBox="0 0 1920 1024">
+        <circle cx="-580" cy="512" r="690" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1.2"/>
+        <circle cx="110" cy="512" r="4" fill="#ffffff"/>
+        <g id="dial-rotator"></g>
+      </svg>
+    </div>
+    <div id="dial-text-box" class="dial-text-box" inert>
+      <div class="dial-glow-bg" aria-hidden="true"></div>
+      <span id="dial-category" class="dial-category"></span>
+      <h2 id="dial-title" class="dial-title"></h2>
+      <button type="button" id="dial-detail-btn" class="dial-detail-btn">자세히 보기 →</button>
+    </div>
    <div id="story-ending"><p>보이지 않는 원자에서 시작된<br>에너지가 우리의 일상을 움직입니다.</p><span>KAERI<br>한국원자력연구원</span></div>
     <button id="hero-quick-menu-btn" class="hero-quick-menu-btn" aria-label="메뉴 바로가기"><span class="quick-icon" aria-hidden="true">↗</span><span class="quick-text">메뉴 바로가기</span></button>
   </div>

@@ -370,32 +370,114 @@ window.VideoScrubber = (() => {
     return 1 - smooth(clamp(overrun / 0.5));
   }
 
-  /* ── Dial & Text State (hiding text/dials until step 2) ────── */
+  /* ── Dial & Text State (scroll-linked rotation 00 -> 01 -> 02 -> 03) ────── */
 
   function getDialState(position) {
     const videoPos = position - VIDEO_START;
     if (!ready || videoPos < 0 || videoPos > totalScrollUnits) {
-      return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0, category: '', title: '' };
+      return { visible: false, dialAlpha: 0, descAlpha: 0, rotationDeg: 0, activeIndex: -1, category: '', title: '' };
     }
     const { videoIndex, targetRatio } = getVideoTimeAndIndex(videoPos);
-    for (const d of UI_CONFIG.dial) {
-      if (videoIndex === d.video && targetRatio >= d.minRatio && targetRatio <= d.maxRatio) {
-        const segProgress = (targetRatio - d.minRatio) / Math.max(0.001, d.maxRatio - d.minRatio);
-        let alpha = 1.0;
-        if (segProgress < 0.1) alpha = smooth(segProgress / 0.1);
-        else if (segProgress > 0.9) alpha = 1.0 - smooth((segProgress - 0.9) / 0.1);
-        return {
-          visible: true,
-          descVisible: d.showDesc,
-          chapter: d.chapter,
-          dialAlpha: alpha,
-          descAlpha: d.showDesc ? alpha : 0,
-          category: d.category,
-          title: d.title
-        };
+
+    // videoIndex 0: atom formation (dial hidden initially, appears near end)
+    if (videoIndex === 0) {
+      if (targetRatio < 0.90) {
+        return { visible: false, dialAlpha: 0, descAlpha: 0, rotationDeg: 0, activeIndex: -1, category: '', title: '' };
       }
+      const fadeIn = smooth((targetRatio - 0.90) / 0.10);
+      return { visible: true, dialAlpha: fadeIn, descAlpha: 0, rotationDeg: 0, activeIndex: 0, category: '', title: '' };
     }
-    return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0, category: '', title: '' };
+
+    // videoIndex 1: 02-atom-to-mri (00. -> 01. LIFE SCIENCE)
+    if (videoIndex === 1) {
+      let rot = 0;
+      let descAlpha = 0;
+      if (targetRatio < 0.65) {
+        const t = smooth(targetRatio / 0.65);
+        rot = 0 - t * 24; // Rotates 0deg -> -24deg
+      } else {
+        rot = -24; // Settles exactly at 01.
+        const holdProgress = (targetRatio - 0.65) / 0.35;
+        if (holdProgress < 0.12) descAlpha = smooth(holdProgress / 0.12);
+        else if (holdProgress > 0.88) descAlpha = 1 - smooth((holdProgress - 0.88) / 0.12);
+        else descAlpha = 1.0;
+      }
+      return {
+        visible: true,
+        dialAlpha: 1.0,
+        descAlpha,
+        rotationDeg: rot,
+        activeIndex: targetRatio >= 0.65 ? 1 : 0,
+        category: 'LIFE SCIENCE',
+        title: '방사선 융합기술 개발'
+      };
+    }
+
+    // videoIndex 2: 03-mri-to-space (01. -> 02. EXPLORATION)
+    if (videoIndex === 2) {
+      let rot = -24;
+      let descAlpha = 0;
+      if (targetRatio < 0.50) {
+        const t = smooth(targetRatio / 0.50);
+        rot = -24 - t * 24; // Rotates -24deg -> -48deg
+      } else {
+        rot = -48; // Settles exactly at 02.
+        const holdProgress = (targetRatio - 0.50) / 0.50;
+        if (holdProgress < 0.12) descAlpha = smooth(holdProgress / 0.12);
+        else if (holdProgress > 0.88) descAlpha = 1 - smooth((holdProgress - 0.88) / 0.12);
+        else descAlpha = 1.0;
+      }
+      return {
+        visible: true,
+        dialAlpha: 1.0,
+        descAlpha,
+        rotationDeg: rot,
+        activeIndex: targetRatio >= 0.50 ? 2 : 1,
+        category: 'EXPLORATION',
+        title: '양자빔 활용 과학기술'
+      };
+    }
+
+    // videoIndex 3: 04-space-to-smr (02. -> 03. FUTURE ENERGY)
+    if (videoIndex === 3) {
+      let rot = -48;
+      let descAlpha = 0;
+      if (targetRatio < 0.50) {
+        const t = smooth(targetRatio / 0.50);
+        rot = -48 - t * 24; // Rotates -48deg -> -72deg
+      } else {
+        rot = -72; // Settles exactly at 03.
+        const holdProgress = (targetRatio - 0.50) / 0.50;
+        if (holdProgress < 0.12) descAlpha = smooth(holdProgress / 0.12);
+        else if (holdProgress > 0.88) descAlpha = 1 - smooth((holdProgress - 0.88) / 0.12);
+        else descAlpha = 1.0;
+      }
+      return {
+        visible: true,
+        dialAlpha: 1.0,
+        descAlpha,
+        rotationDeg: rot,
+        activeIndex: targetRatio >= 0.50 ? 3 : 2,
+        category: 'FUTURE ENERGY',
+        title: '선진 원자로 기술개발'
+      };
+    }
+
+    // videoIndex 4: smr-to-head (graceful fade out of dial)
+    if (videoIndex === 4) {
+      const fadeOut = 1 - smooth(clamp(targetRatio / 0.35));
+      return {
+        visible: fadeOut > 0.01,
+        dialAlpha: fadeOut,
+        descAlpha: 0,
+        rotationDeg: -72,
+        activeIndex: 3,
+        category: '',
+        title: ''
+      };
+    }
+
+    return { visible: false, dialAlpha: 0, descAlpha: 0, rotationDeg: -72, activeIndex: -1, category: '', title: '' };
   }
 
   function isScrollIndicatorHidden(position) {

@@ -18,8 +18,47 @@ let toastTimer;function toast(message){const el=$('#toast-modal');el.textContent
 
 const chapters=[['LIFE SCIENCE','방사선 융합기술 개발'],['EXPLORATION','양자빔 활용 과학기술'],['FUTURE ENERGY','선진 원자로 기술개발']];
 
-// SVG dial numbers
-const ns='http://www.w3.org/2000/svg';const numbers=Array.from({length:4},(_,i)=>{const g=document.createElementNS(ns,'g'),c=document.createElementNS(ns,'circle'),t=document.createElementNS(ns,'text');c.setAttribute('r','6');c.setAttribute('stroke','currentColor');c.setAttribute('fill','none');t.setAttribute('x','16');t.setAttribute('y','29');t.setAttribute('class','dial-number');t.textContent=`0${i}.`;g.append(c,t);$('#dial-numbers').append(g);return g;});
+// SVG Dial structure: Center (-580, 512), Arc Radius 690, Step 24 deg
+const ns = 'http://www.w3.org/2000/svg';
+const dialRotator = $('#dial-rotator');
+const dialNodes = [];
+const DIAL_CX = -580, DIAL_CY = 512, DIAL_R = 690, DIAL_R_TEXT = 735, DIAL_STEP = 24;
+
+if (dialRotator) {
+  for (let i = 0; i < 4; i++) {
+    const g = document.createElementNS(ns, 'g');
+    const baseDeg = i * DIAL_STEP;
+    const rad = (baseDeg * Math.PI) / 180;
+
+    // Node ring on the arc
+    const circle = document.createElementNS(ns, 'circle');
+    const cx_node = DIAL_CX + DIAL_R * Math.cos(rad);
+    const cy_node = DIAL_CY + DIAL_R * Math.sin(rad);
+    circle.setAttribute('cx', String(cx_node));
+    circle.setAttribute('cy', String(cy_node));
+    circle.setAttribute('r', '4');
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', 'rgba(255,255,255,0.45)');
+    circle.setAttribute('stroke-width', '1.2');
+
+    // Number text: 00., 01., 02., 03.
+    const text = document.createElementNS(ns, 'text');
+    const tx = DIAL_CX + DIAL_R_TEXT * Math.cos(rad);
+    const ty = DIAL_CY + DIAL_R_TEXT * Math.sin(rad) + 12; // visual baseline adjustment
+    text.setAttribute('x', String(tx));
+    text.setAttribute('y', String(ty));
+    text.setAttribute('font-family', "'Outfit', sans-serif");
+    text.setAttribute('font-size', '56');
+    text.setAttribute('font-weight', '200');
+    text.setAttribute('fill', 'rgba(255,255,255,0.35)');
+    text.setAttribute('transform', `rotate(${baseDeg}, ${tx}, ${ty})`);
+    text.textContent = `0${i}.`;
+
+    g.append(circle, text);
+    dialRotator.append(g);
+    dialNodes.push({ g, circle, text, baseDeg, tx, ty });
+  }
+}
 
 let unit=500,s=1,ox=0,oy=0,w=0,h=0,dpr=1,position=0,target=0,lastTime=0,raf=0,menuExit=0;
 
@@ -28,7 +67,7 @@ let cumulative=[];
 let LAST=0;
 let endingScrollStart=0;
 let totalHeight=0;
-const ENDING_UNITS = 21.2; // 0.4 video fade + 0.3 text in + 6.0 text hold + 0.3 text out + 1.5 organic bloom & sequential entrance (1.5x) + 10.0 circle hold (2.0x) + 3.0 sequential circle exit (1.5x)
+const ENDING_UNITS = 19.2; // 0.4 video fade + 0.3 text in + 6.0 text hold + 0.3 text out + 1.5 organic bloom & sequential entrance (1.5x) + 8.0 circle hold (80% of 10.0 = 8.0) + 3.0 sequential circle exit (1.5x)
 
 function rebuildTimeline(){
  const videoUnits = VideoScrubber.totalScrollUnits;
@@ -36,7 +75,7 @@ function rebuildTimeline(){
  // Video section: mapped to videoUnits
  const videoScrollPx = videoUnits * unit;
  cumulative.push(cumulative.at(-1) + videoScrollPx);
- // Ending section: 21.2 scroll units
+ // Ending section: 19.2 scroll units
  const endingLength = ENDING_UNITS * unit;
  endingScrollStart = cumulative.at(-1);
  cumulative.push(cumulative.at(-1) + endingLength);
@@ -136,15 +175,48 @@ function getOrganicBloomMask(t) {
 /* ── Dial & Text (video-aware) ─────────────────────────────── */
 function drawDialVideo(p){
  const state = VideoScrubber.getDialState(p);
- if(state && state.visible){
-  $('#dial-category').textContent = state.category || '';
-  $('#dial-title').textContent = state.title || '';
-  visible(desc, state.descAlpha);
-  desc.inert = state.descAlpha < 0.5;
-  numbers.forEach((g, i) => {
-   g.classList.toggle('is-active', i + 1 === state.chapter);
-  });
+ if(state && state.visible && state.dialAlpha > 0.001){
   visible(dial, state.dialAlpha);
+  if (dialRotator) {
+   dialRotator.setAttribute('transform', `rotate(${state.rotationDeg}, ${DIAL_CX}, ${DIAL_CY})`);
+  }
+
+  // Update active highlight and rotation orientation for each number
+  dialNodes.forEach((node) => {
+   const currentAngleOnScreen = node.baseDeg + state.rotationDeg;
+   const distToZero = Math.abs(currentAngleOnScreen);
+   const isSelected = distToZero < 4.0;
+   const selectWeight = smooth(clamp(1 - distToZero / 14.0));
+
+   if (isSelected) {
+    node.text.setAttribute('fill', '#ffffff');
+    node.text.setAttribute('font-size', '66');
+    node.text.setAttribute('font-weight', '300');
+    node.text.setAttribute('opacity', '1.0');
+    node.circle.setAttribute('stroke', '#ffffff');
+    node.circle.setAttribute('fill', '#ffffff');
+    // Upright alignment for selected number
+    node.text.setAttribute('transform', `rotate(${node.baseDeg * (1 - selectWeight)}, ${node.tx}, ${node.ty})`);
+   } else {
+    node.text.setAttribute('fill', 'rgba(255,255,255,0.35)');
+    node.text.setAttribute('font-size', '54');
+    node.text.setAttribute('font-weight', '200');
+    node.text.setAttribute('opacity', String(0.35 + selectWeight * 0.45));
+    node.circle.setAttribute('stroke', 'rgba(255,255,255,0.45)');
+    node.circle.setAttribute('fill', 'none');
+    node.text.setAttribute('transform', `rotate(${node.baseDeg}, ${node.tx}, ${node.ty})`);
+   }
+  });
+
+  if (state.descAlpha > 0.01) {
+   $('#dial-category').textContent = state.category || '';
+   $('#dial-title').textContent = state.title || '';
+   visible(desc, state.descAlpha);
+   desc.inert = state.descAlpha < 0.5;
+  } else {
+   visible(desc, 0);
+   desc.inert = true;
+  }
  } else {
   visible(dial, 0);
   visible(desc, 0);
@@ -244,8 +316,8 @@ function render(now){
   stage.style.webkitMaskImage = maskRule;
 
   renderEntrance(entranceProgress);
- } else if (overrun <= 18.2) {
-  // PERFECT PINNED HOLD (10.0 units, 2x duration, ~7.0x viewport height): all circles fully landed, mask removed
+ } else if (overrun <= 16.2) {
+  // PERFECT PINNED HOLD (8.0 units, 80% of 10.0 = 8.0, ~5.6x viewport height): all circles fully landed, mask removed
   visible(stage, 1);
   stage.style.pointerEvents = 'auto';
   stage.style.maskImage = 'none';
@@ -253,7 +325,7 @@ function render(now){
   renderEntrance(1.0);
  } else {
   // Sequential top-to-bottom exit over dedicated 3.0 scroll units (1.5x duration)
-  const exitProgress = clamp((overrun - 18.2) / 3.0);
+  const exitProgress = clamp((overrun - 16.2) / 3.0);
   visible(stage, 1);
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
@@ -264,7 +336,7 @@ function render(now){
  // Scroll indicator
  const indicator=$('#scroll-indicator');
  const videoScrollHidden = VideoScrubber.isScrollIndicatorHidden(position) || overrun > 0.1;
- const pastMenu = overrun > 18.0;
+ const pastMenu = overrun > 16.0;
  indicator.style.opacity = (pastMenu || videoScrollHidden) ? '0' : '1';
  $('.scroll-text').textContent=position<.8?'스크롤하여 원자의 흐름을 따라가세요.':'스크롤';
 
@@ -411,7 +483,7 @@ function renderExit(p){
 menu.addEventListener('click',e=>{if(!e.target.closest('.menu-circle'))deselect();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){const old=selected;deselect();if(old)els.get(old).button.focus({preventScroll:true});}});addEventListener('scroll',()=>{if(selected&&Math.abs(scrollY-selectedAtY)>.5)deselect();wake();},{passive:true});
 function openMenu(id){
  deselect();
- const targetScroll = cumulative[1] + (8.2 + 5.0) * unit;
+ const targetScroll = cumulative[1] + (8.2 + 4.0) * unit;
  window.scrollTo({top: targetScroll, behavior:'auto'});
  wake();
  if(id&&els.has(id)){select(id);els.get(id).button.focus({preventScroll:true});}
