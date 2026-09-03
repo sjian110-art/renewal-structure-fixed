@@ -27,73 +27,73 @@ window.VideoScrubber = (() => {
       id: '01-atom-formation',
       src: 'assets/videos/hero-v2-scrub/01-atom-formation.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 } // Atom formation (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 9.6 } // Atom formation (doubled to 9.6)
       ]
     },
     {
       id: '02-atom-to-mri',
       src: 'assets/videos/hero-v2-scrub/02-atom-to-mri.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 0.9 }, // Atom -> MRI transition (fast)
-        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 2.2 }  // MRI completed form hold (slow)
+        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 5.4 },  // Atom -> MRI transition (doubled to 5.4)
+        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 26.4 }  // MRI completed form hold (doubled to 26.4)
       ]
     },
     {
       id: '03-mri-to-space',
       src: 'assets/videos/hero-v2-scrub/03-mri-to-space.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 1.0 }, // MRI -> Space transition (fast)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 2.5 }  // Space completed form hold (slow)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },  // MRI -> Space transition (doubled to 6.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 30.0 }  // Space completed form hold (doubled to 30.0)
       ]
     },
     {
       id: '04-space-to-smr',
       src: 'assets/videos/hero-v2-scrub/04-space-to-smr.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 1.0 }, // Space -> SMR transition (fast)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 2.5 }  // SMR completed form hold (slow)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },  // Space -> SMR transition (doubled to 6.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 30.0 }  // SMR completed form hold (doubled to 30.0)
       ]
     },
     {
       id: '05-smr-to-head',
       src: 'assets/videos/hero-v2-scrub/05-smr-to-head.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // SMR -> Head transition (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // SMR -> Head transition (doubled to 4.8)
       ]
     },
     {
       id: '06-head-to-heart',
       src: 'assets/videos/hero-v2-scrub/06-head-to-heart.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // Head -> Heart transition (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Head -> Heart transition (doubled to 4.8)
       ]
     },
     {
       id: '07-heart-to-hand',
       src: 'assets/videos/hero-v2-scrub/07-heart-to-hand.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.9 }  // Heart -> Hand transition (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 5.4 }   // Heart -> Hand transition (doubled to 5.4)
       ]
     },
     {
       id: '08-hands-touch',
       src: 'assets/videos/hero-v2-scrub/08-hands-touch.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.6 }  // Hands touch (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Hands touch (doubled to 3.6)
       ]
     },
     {
       id: '09-handshake',
       src: 'assets/videos/hero-v2-scrub/09-handshake.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.6 }  // Handshake (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Handshake (doubled to 3.6)
       ]
     },
     {
       id: '10-energy-transfer',
       src: 'assets/videos/hero-v2-scrub/10-energy-transfer.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // Energy transfer & final absorption (fast)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Energy transfer & final absorption (doubled to 4.8)
       ]
     }
   ];
@@ -102,9 +102,9 @@ window.VideoScrubber = (() => {
 
   const UI_CONFIG = {
     dial: [
-      { video: 1, minRatio: 0.65, maxRatio: 1.0, chapter: 1, category: 'LIFE SCIENCE', title: '방사선 융합기술 개발', showDesc: false },
-      { video: 2, minRatio: 0.50, maxRatio: 1.0, chapter: 2, category: 'EXPLORATION', title: '양자빔 활용 과학기술', showDesc: false },
-      { video: 3, minRatio: 0.50, maxRatio: 1.0, chapter: 3, category: 'FUTURE ENERGY', title: '선진 원자로 기술개발', showDesc: false }
+      { video: 1, minRatio: 0.65, maxRatio: 1.0, chapter: 1, category: 'LIFE SCIENCE', title: '방사선 융합기술 개발', showDesc: true },
+      { video: 2, minRatio: 0.50, maxRatio: 1.0, chapter: 2, category: 'EXPLORATION', title: '양자빔 활용 과학기술', showDesc: true },
+      { video: 3, minRatio: 0.50, maxRatio: 1.0, chapter: 3, category: 'FUTURE ENERGY', title: '선진 원자로 기술개발', showDesc: true }
     ],
     blacknessRamp: { video: 0, fadeStartRatio: 0.3, fadeEndRatio: 1.0 }
   };
@@ -267,15 +267,11 @@ window.VideoScrubber = (() => {
 
   function performSeek(video, targetTime) {
     if (!video || video.readyState < 1) return;
-    if (Math.abs(video.currentTime - targetTime) > 0.008) {
+    if (Math.abs(video.currentTime - targetTime) > 0.002) {
       try {
-        if (typeof video.fastSeek === 'function') {
-          video.fastSeek(targetTime);
-        } else {
-          video.currentTime = targetTime;
-        }
-      } catch (err) {
         video.currentTime = targetTime;
+      } catch (err) {
+        /* ignore */
       }
     }
   }
@@ -286,7 +282,7 @@ window.VideoScrubber = (() => {
     if (!video || video.readyState < 1) return;
 
     const dur = video.duration || durations[seekVideoIdx] || 8.0;
-    const t = clamp(seekTarget, 0, dur - 0.01);
+    const t = clamp(seekTarget, 0, dur - 0.001);
 
     pendingSeekTime = t;
     if (!video.seeking) {
@@ -296,16 +292,18 @@ window.VideoScrubber = (() => {
 
   function switchToVideo(idx) {
     if (currentVideoIndex === idx) return;
+    const prevIdx = currentVideoIndex;
+    currentVideoIndex = idx;
 
     videoEls.forEach((v, i) => {
       if (i === idx) {
         v.style.zIndex = '2';
         v.style.visibility = 'visible';
         v.style.opacity = '1';
-      } else if (i === currentVideoIndex) {
+      } else if (i === prevIdx) {
         v.style.zIndex = '1';
         requestAnimationFrame(() => {
-          if (currentVideoIndex !== idx && i !== idx) {
+          if (currentVideoIndex !== prevIdx) {
             v.style.opacity = '0';
             v.style.visibility = 'hidden';
             v.style.zIndex = '0';
@@ -317,8 +315,6 @@ window.VideoScrubber = (() => {
         v.style.visibility = 'hidden';
       }
     });
-
-    currentVideoIndex = idx;
   }
 
   function hideAll() {
@@ -335,6 +331,23 @@ window.VideoScrubber = (() => {
         v.preload = 'auto';
       }
     });
+
+    // Boundary pre-seeking for seamless forward/reverse transitions
+    if (idx + 1 < videoEls.length) {
+      const nextVid = videoEls[idx + 1];
+      if (nextVid && nextVid.readyState >= 1 && !nextVid.seeking && nextVid.currentTime > 0.1) {
+        try { nextVid.currentTime = 0; } catch (e) {}
+      }
+    }
+    if (idx - 1 >= 0) {
+      const prevVid = videoEls[idx - 1];
+      if (prevVid && prevVid.readyState >= 1 && !prevVid.seeking) {
+        const prevDur = prevVid.duration || durations[idx - 1] || 8.0;
+        if (prevVid.currentTime < prevDur - 0.2) {
+          try { prevVid.currentTime = Math.max(0, prevDur - 0.01); } catch (e) {}
+        }
+      }
+    }
   }
 
   /* ── Blackness (Background Color) ─────────────────────────── */
@@ -360,6 +373,28 @@ window.VideoScrubber = (() => {
   /* ── Dial & Text State (hiding text/dials until step 2) ────── */
 
   function getDialState(position) {
+    const videoPos = position - VIDEO_START;
+    if (!ready || videoPos < 0 || videoPos > totalScrollUnits) {
+      return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0, category: '', title: '' };
+    }
+    const { videoIndex, targetRatio } = getVideoTimeAndIndex(videoPos);
+    for (const d of UI_CONFIG.dial) {
+      if (videoIndex === d.video && targetRatio >= d.minRatio && targetRatio <= d.maxRatio) {
+        const segProgress = (targetRatio - d.minRatio) / Math.max(0.001, d.maxRatio - d.minRatio);
+        let alpha = 1.0;
+        if (segProgress < 0.1) alpha = smooth(segProgress / 0.1);
+        else if (segProgress > 0.9) alpha = 1.0 - smooth((segProgress - 0.9) / 0.1);
+        return {
+          visible: true,
+          descVisible: d.showDesc,
+          chapter: d.chapter,
+          dialAlpha: alpha,
+          descAlpha: d.showDesc ? alpha : 0,
+          category: d.category,
+          title: d.title
+        };
+      }
+    }
     return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0, category: '', title: '' };
   }
 
