@@ -80,7 +80,27 @@
   <div id="bg-layer"></div>
   <div id="video-stage" aria-hidden="true"></div>
   <canvas id="atom-canvas" aria-hidden="true"></canvas>
-  <img id="atom-fallback" src="assets/atom-01-core.png" alt="원자 중심" hidden>
+   <div id="atom-idle-stage" class="atom-idle-stage" aria-hidden="true">
+    <div class="atom-drift-wrapper" id="atom-drift-wrapper">
+      <svg class="atom-sketch-lines" viewBox="0 0 300 300" aria-hidden="true">
+        <g class="sketch-line-group">
+          <line x1="150" y1="92" x2="150" y2="72" class="sketch-line line-0" />
+          <line x1="178" y1="102" x2="194" y2="86" class="sketch-line line-1" />
+          <line x1="198" y1="126" x2="220" y2="120" class="sketch-line line-2" />
+          <line x1="206" y1="150" x2="230" y2="150" class="sketch-line line-3" />
+          <line x1="198" y1="174" x2="222" y2="182" class="sketch-line line-4" />
+          <line x1="178" y1="198" x2="196" y2="214" class="sketch-line line-5" />
+          <line x1="150" y1="208" x2="150" y2="232" class="sketch-line line-6" />
+          <line x1="122" y1="198" x2="104" y2="216" class="sketch-line line-7" />
+          <line x1="102" y1="174" x2="78" y2="182" class="sketch-line line-8" />
+          <line x1="94" y1="150" x2="70" y2="150" class="sketch-line line-9" />
+          <line x1="102" y1="126" x2="80" y2="118" class="sketch-line line-10" />
+          <line x1="122" y1="102" x2="106" y2="84" class="sketch-line line-11" />
+        </g>
+      </svg>
+      <img src="assets/atom-core-idle.png" alt="대기 원자핵" class="atom-core-img" id="atom-core-img">
+    </div>
+   </div>
   <div class="reference-stage">
    <div class="atom-text-box" id="atom-text"><p>KAERI<br>미래를 설계하는 원자력 연구</p><h1>원자에서 시작되는<br>대한민국의 미래</h1></div>
     <div id="left-dial" class="left-dial" aria-hidden="true">

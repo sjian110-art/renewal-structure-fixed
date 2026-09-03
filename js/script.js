@@ -9,6 +9,7 @@ if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
 const $=s=>document.querySelector(s), clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),smooth=v=>{v=clamp(v);return v*v*(3-2*v);},mix=(a,b,t)=>a+(b-a)*t;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const hero=$('#hero-pin-section'), stage=$('#circular-stage'), menu=$('#circular-stage'), bg=$('#bg-layer'), text=$('#atom-text'), dial=$('#left-dial'), desc=$('#dial-text-box'), ending=$('#story-ending'), quickMenuBtn=$('#hero-quick-menu-btn');
+const atomIdleStage=$('#atom-idle-stage');
 const canvas=$('#atom-canvas'),ctx=canvas.getContext('2d');
 const videoStage=$('#video-stage');
 
@@ -267,6 +268,21 @@ function render(now){
 
  // Video scrubber update
  VideoScrubber.update(position);
+
+ // Idle Atom Breathing & Smooth Video Hand-off
+ if (atomIdleStage) {
+  if (position <= 0.05) {
+   visible(atomIdleStage, 1.0);
+   atomIdleStage.classList.remove('is-paused');
+  } else if (position <= 0.45) {
+   const idleAlpha = 1 - smooth((position - 0.05) / 0.40);
+   visible(atomIdleStage, idleAlpha);
+   atomIdleStage.classList.remove('is-paused');
+  } else {
+   visible(atomIdleStage, 0);
+   atomIdleStage.classList.add('is-paused');
+  }
+ }
 
  // Initial atom text fade out
  visible(text, 1 - smooth((position - 0.1) / 0.6));
