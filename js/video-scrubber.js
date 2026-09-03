@@ -1,8 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
-   video-scrubber.js  –  Scroll-scrubbed Video Engine
-   Manages 9 MP4 segments tied to scroll position.
-   Replaces StoryRenderer / StoryGeometry / KaeriEnergy for the
-   black-background hero section.
+   video-scrubber.js  –  Continuous High-Performance Video Engine (hero-v2)
+   Manages 10 MP4 segments from assets/videos/hero-v2/ tied to scroll position.
+   Provides silky-smooth, continuous 60 FPS video scrubbing with non-blocking seek queuing.
 
    Public API
      VideoScrubber.init(container, bgLayer)
@@ -15,367 +14,399 @@
      VideoScrubber.VIDEO_START       frame where videos begin
    ───────────────────────────────────────────────────────────── */
 window.VideoScrubber = (() => {
- 'use strict';
+  'use strict';
 
- /* ── Configuration ─────────────────────────────────────────── */
+  /* ── Configuration (10 Videos in hero-v2) ─────────────────── */
 
- const VIDEOS = [
-  { src: 'assets/videos/hero-01-atom-to-mri.mp4',   scrollWeight: 2.4 },
-  { src: 'assets/videos/hero-02-mri-to-space.mp4',   scrollWeight: 2.8 },
-  { src: 'assets/videos/hero-03-space-to-smr.mp4',   scrollWeight: 2.8 },
-  { src: 'assets/videos/hero-04-smr-to-head.mp4',    scrollWeight: 2.4 },
-  { src: 'assets/videos/hero-05-head-to-heart.mp4',  scrollWeight: 2.4 },
-  { src: 'assets/videos/hero-06-heart-to-hand.mp4',  scrollWeight: 2.4 },
-  { src: 'assets/videos/hero-07-hands-touch.mp4',    scrollWeight: 3.0 },
-  { src: 'assets/videos/hero-08-handshake.mp4',      scrollWeight: 3.0 },
-  { src: 'assets/videos/hero-09-energy-transfer.mp4', scrollWeight: 3.0 },
- ];
-
- const VIDEO_START = 7; // after atom fission completes
-
- const UI_CONFIG = {
-  // Dial visibility: MRI, Space, SMR scenes
-  // The video file itself contains the dial graphics (circle + 01., 02., 03. numbers),
-  // so SVG #left-dial is hidden to prevent duplication. Only text/button (#dial-text-box) is displayed.
-  dial: [
-   { video: 0, startTime: 5.0, endTime: 8.0, chapter: 1, showDesc: false },
-   { video: 1, startTime: 0.0, endTime: 3.0, chapter: 1, showDesc: true  },
-   { video: 1, startTime: 3.0, endTime: 8.0, chapter: 2, showDesc: false },
-   { video: 2, startTime: 0.0, endTime: 5.0, chapter: 2, showDesc: true  },
-   { video: 2, startTime: 5.0, endTime: 8.0, chapter: 3, showDesc: false },
-   { video: 3, startTime: 0.0, endTime: 3.0, chapter: 3, showDesc: true  },
-  ],
-  blacknessRamp: { video: 0, startTime: 0.5, endTime: 3.5 },
-  scrollIndicatorHidden: [
-   { video: 0, startTime: 0.0, endTime: 2.5 },
-  ],
- };
-
- /* ── State ──────────────────────────────────────────────────── */
-
- let container = null;
- let bgLayer = null;
- const videoEls = [];
- const durations = VIDEOS.map(() => 8.0); // 8.0s initial fallback duration
- let ready = false;
- let currentVideoIndex = -1;
- let totalScrollUnits = 0;
- let segmentStarts = [];
- let seekTarget = -1;
- let seekVideoIdx = -1;
-
-
- const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
- const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
-
- /* ── Initialization ────────────────────────────────────────── */
-
- function init(containerEl, bgLayerEl) {
-  container = containerEl;
-  bgLayer = bgLayerEl;
-
-  computeSegments();
-  ready = true; // Set ready immediately so scroll scrubbing works from frame 1
-
-  VIDEOS.forEach((cfg, i) => {
-   const video = document.createElement('video');
-   video.muted = true;
-   video.playsInline = true;
-   video.preload = 'auto';
-   video.src = cfg.src; // Direct src assignment for instant browser media load
-   video.setAttribute('playsinline', '');
-   video.setAttribute('muted', '');
-   video.removeAttribute('controls');
-   video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:0;will-change:opacity;z-index:0;visibility:hidden;';
-
-   video.addEventListener('loadedmetadata', () => {
-    if (video.duration && !isNaN(video.duration) && video.duration > 0) {
-     durations[i] = video.duration;
-     computeSegments();
+  // Sub-segment configurations per video (100% full duration coverage for each video):
+  //   - ratioStart: start fraction of video duration (0.0)
+  //   - ratioEnd: end fraction of video duration (1.0)
+  //   - scrollWeight: relative scroll distance assigned to this portion
+  const VIDEOS = [
+    {
+      id: '01-atom-formation',
+      src: 'assets/videos/hero-v2-scrub/01-atom-formation.mp4.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 } // Atom formation (fast)
+      ]
+    },
+    {
+      id: '02-atom-to-mri',
+      src: 'assets/videos/hero-v2-scrub/02-atom-to-mri.mp4.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 0.9 }, // Atom -> MRI transition (fast)
+        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 2.2 }  // MRI completed form hold (slow)
+      ]
+    },
+    {
+      id: '03-mri-to-space',
+      src: 'assets/videos/hero-v2-scrub/03-mri-to-space.mp4.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 1.0 }, // MRI -> Space transition (fast)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 2.5 }  // Space completed form hold (slow)
+      ]
+    },
+    {
+      id: '04-space-to-smr',
+      src: 'assets/videos/hero-v2-scrub/04-space-to-smr.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 1.0 }, // Space -> SMR transition (fast)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 2.5 }  // SMR completed form hold (slow)
+      ]
+    },
+    {
+      id: '05-smr-to-head',
+      src: 'assets/videos/hero-v2-scrub/05-smr-to-head.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // SMR -> Head transition (fast)
+      ]
+    },
+    {
+      id: '06-head-to-heart',
+      src: 'assets/videos/hero-v2-scrub/06-head-to-heart.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // Head -> Heart transition (fast)
+      ]
+    },
+    {
+      id: '07-heart-to-hand',
+      src: 'assets/videos/hero-v2-scrub/07-heart-to-hand.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.9 }  // Heart -> Hand transition (fast)
+      ]
+    },
+    {
+      id: '08-hands-touch',
+      src: 'assets/videos/hero-v2-scrub/08-hands-touch.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.6 }  // Hands touch (fast)
+      ]
+    },
+    {
+      id: '09-handshake',
+      src: 'assets/videos/hero-v2-scrub/09-handshake.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.6 }  // Handshake (fast)
+      ]
+    },
+    {
+      id: '10-energy-transfer',
+      src: 'assets/videos/hero-v2-scrub/10-energy-transfer.mp4',
+      subSegments: [
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 0.8 }  // Energy transfer & final absorption (fast)
+      ]
     }
-   });
+  ];
 
-   video.addEventListener('canplay', () => {
-    if (seekVideoIdx === i && seekTarget >= 0) {
-     applySeek();
-    }
-   });
+  const VIDEO_START = 0;
 
-   video.addEventListener('seeked', () => {
-    if (seekVideoIdx === i) applySeek();
-   });
+  const UI_CONFIG = {
+    dial: [
+      { video: 1, minRatio: 0.65, maxRatio: 1.0, chapter: 1, category: 'LIFE SCIENCE', title: '방사선 융합기술 개발', showDesc: false },
+      { video: 2, minRatio: 0.50, maxRatio: 1.0, chapter: 2, category: 'EXPLORATION', title: '양자빔 활용 과학기술', showDesc: false },
+      { video: 3, minRatio: 0.50, maxRatio: 1.0, chapter: 3, category: 'FUTURE ENERGY', title: '선진 원자로 기술개발', showDesc: false }
+    ],
+    blacknessRamp: { video: 0, fadeStartRatio: 0.3, fadeEndRatio: 1.0 }
+  };
 
-   video.addEventListener('error', (e) => {
-    const status = document.getElementById('video-load-status');
-    if (status) { status.hidden = false; status.textContent = '영상 파일을 불러오지 못했습니다: ' + cfg.src; }
-    console.warn(`[VideoScrubber] Error loading video ${i}: ${cfg.src}`, e);
-   });
+  /* ── State ──────────────────────────────────────────────────── */
 
-   videoEls.push(video);
-   container.appendChild(video);
-   
-   // Trigger browser media pipeline load
-   try { video.load(); } catch (err) { /* ignore */ }
-  });
- }
+  let container = null;
+  let bgLayer = null;
+  const videoEls = [];
+  const durations = VIDEOS.map(() => 8.0);
+  let ready = false;
+  let currentVideoIndex = -1;
+  let totalScrollUnits = 0;
+  let allSubSegments = [];
+  let seekTarget = -1;
+  let seekVideoIdx = -1;
+  let pendingSeekTime = -1;
 
- function computeSegments() {
-  const totalWeight = VIDEOS.reduce((s, v) => s + v.scrollWeight, 0);
-  segmentStarts = [0];
-  VIDEOS.forEach((v, i) => {
-   segmentStarts.push(segmentStarts[i] + v.scrollWeight);
-  });
-  totalScrollUnits = totalWeight;
- }
+  const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+  const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
 
- function resize() {
-  // CSS object-fit:contain handles video sizing automatically.
- }
+  /* ── Segment Computation ──────────────────────────────────── */
 
- /* ── Update (called every render frame) ─────────────────────── */
+  function computeSegments() {
+    allSubSegments = [];
+    let currentScroll = 0;
 
- function update(position) {
-  if (!ready || !container) return;
+    VIDEOS.forEach((vid, videoIndex) => {
+      vid.subSegments.forEach((sub, subIndex) => {
+        const scrollStart = currentScroll;
+        const scrollEnd = currentScroll + sub.scrollWeight;
+        currentScroll = scrollEnd;
 
-  const videoPos = position - VIDEO_START;
-  if (videoPos < -0.3 || videoPos > totalScrollUnits + 0.5) {
-   hideAll();
-   currentVideoIndex = -1;
-   return;
+        allSubSegments.push({
+          videoIndex,
+          subIndex,
+          ratioStart: sub.ratioStart,
+          ratioEnd: sub.ratioEnd,
+          scrollWeight: sub.scrollWeight,
+          scrollStart,
+          scrollEnd
+        });
+      });
+    });
+
+    totalScrollUnits = currentScroll;
   }
 
-  const clampedPos = clamp(videoPos, 0, totalScrollUnits);
+  function getVideoTimeAndIndex(videoPos) {
+    const clampedPos = clamp(videoPos, 0, totalScrollUnits);
 
-  let vidIdx = 0;
-  for (let i = 0; i < VIDEOS.length; i++) {
-   if (clampedPos >= segmentStarts[i] && clampedPos < segmentStarts[i + 1]) {
-    vidIdx = i;
-    break;
-   }
-   if (i === VIDEOS.length - 1) vidIdx = i;
-  }
-
-  const segStart = segmentStarts[vidIdx];
-  const segEnd = segmentStarts[vidIdx + 1];
-  const segProgress = clamp((clampedPos - segStart) / (segEnd - segStart));
-
-  const targetTime = segProgress * (durations[vidIdx] || 8.0);
-
-  // Show active video and hide inactive ones with z-index stacking
-  switchToVideo(vidIdx);
-
-  container.style.opacity = String(getVideoOpacity(position));
-
-  // Seek video to target time
-  seekVideoIdx = vidIdx;
-  seekTarget = targetTime;
-  applySeek();
-
-  preloadAdjacent(vidIdx);
- }
-
- function applySeek() {
-  if (seekVideoIdx < 0 || seekTarget < 0) return;
-  const video = videoEls[seekVideoIdx];
-  if (!video) return;
-
-  if (video.readyState < 1 || !Number.isFinite(video.duration)) return;
-  const dur = video.duration;
-  const t = clamp(seekTarget, 0, dur - 0.01);
-
-  if (Math.abs(video.currentTime - t) > 0.015) {
-   if (!video.seeking) {
-    try {
-     video.currentTime = t;
-    } catch (err) {
-     /* ignore seeking errors on uninitialized media */
+    let sub = allSubSegments[0];
+    for (let i = 0; i < allSubSegments.length; i++) {
+      const s = allSubSegments[i];
+      if (clampedPos >= s.scrollStart && clampedPos <= s.scrollEnd) {
+        sub = s;
+        break;
+      }
+      if (i === allSubSegments.length - 1) sub = s;
     }
-   }
+
+    const segLen = Math.max(0.001, sub.scrollEnd - sub.scrollStart);
+    const progress = clamp((clampedPos - sub.scrollStart) / segLen);
+    const targetRatio = sub.ratioStart + progress * (sub.ratioEnd - sub.ratioStart);
+    const vidDur = durations[sub.videoIndex] || 8.0;
+    const targetTime = targetRatio * vidDur;
+
+    return {
+      videoIndex: sub.videoIndex,
+      targetTime,
+      targetRatio,
+      subSegment: sub
+    };
   }
- }
 
- function switchToVideo(idx) {
-  if (currentVideoIndex === idx) return;
+  /* ── Initialization ────────────────────────────────────────── */
 
-  videoEls.forEach((v, i) => {
-   if (i === idx) {
-    v.style.zIndex = '2';
-    v.style.visibility = 'visible';
-    v.style.opacity = '1';
-   } else if (i === currentVideoIndex) {
-    v.style.zIndex = '1';
-    requestAnimationFrame(() => {
-     if (currentVideoIndex !== i) {
+  function init(containerEl, bgLayerEl) {
+    container = containerEl;
+    bgLayer = bgLayerEl;
+
+    computeSegments();
+    ready = true;
+
+    VIDEOS.forEach((cfg, i) => {
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.src = cfg.src;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('muted', '');
+      video.removeAttribute('controls');
+      video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;will-change:opacity;z-index:0;visibility:hidden;';
+
+      video.addEventListener('loadedmetadata', () => {
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+          durations[i] = video.duration;
+          computeSegments();
+        }
+      });
+
+      video.addEventListener('canplay', () => {
+        if (seekVideoIdx === i && seekTarget >= 0) {
+          applySeek();
+        }
+      });
+
+      video.addEventListener('seeked', () => {
+        if (seekVideoIdx === i && pendingSeekTime >= 0) {
+          const t = pendingSeekTime;
+          pendingSeekTime = -1;
+          performSeek(video, t);
+        }
+      });
+
+      video.addEventListener('error', (e) => {
+        const status = document.getElementById('video-load-status');
+        if (status) {
+          status.hidden = false;
+          status.textContent = '영상 파일을 불러오지 못했습니다: ' + cfg.src;
+        }
+        console.warn(`[VideoScrubber] Error loading video ${i}: ${cfg.src}`, e);
+      });
+
+      videoEls.push(video);
+      container.appendChild(video);
+
+      try { video.load(); } catch (err) { /* ignore */ }
+    });
+  }
+
+  function resize() {
+    // CSS object-fit:contain handles video sizing automatically.
+  }
+
+  /* ── Update Loop (called on render frame) ─────────────────── */
+
+  function update(position) {
+    if (!ready || !container) return;
+
+    const videoPos = position - VIDEO_START;
+    if (videoPos < -0.3 || videoPos > totalScrollUnits + 0.45) {
+      hideAll();
+      currentVideoIndex = -1;
+      return;
+    }
+
+    const { videoIndex, targetTime } = getVideoTimeAndIndex(videoPos);
+
+    switchToVideo(videoIndex);
+    container.style.opacity = String(getVideoOpacity(position));
+
+    seekVideoIdx = videoIndex;
+    seekTarget = targetTime;
+    applySeek();
+
+    preloadAdjacent(videoIndex);
+  }
+
+  function performSeek(video, targetTime) {
+    if (!video || video.readyState < 1) return;
+    if (Math.abs(video.currentTime - targetTime) > 0.008) {
+      try {
+        if (typeof video.fastSeek === 'function') {
+          video.fastSeek(targetTime);
+        } else {
+          video.currentTime = targetTime;
+        }
+      } catch (err) {
+        video.currentTime = targetTime;
+      }
+    }
+  }
+
+  function applySeek() {
+    if (seekVideoIdx < 0 || seekTarget < 0) return;
+    const video = videoEls[seekVideoIdx];
+    if (!video || video.readyState < 1) return;
+
+    const dur = video.duration || durations[seekVideoIdx] || 8.0;
+    const t = clamp(seekTarget, 0, dur - 0.01);
+
+    pendingSeekTime = t;
+    if (!video.seeking) {
+      performSeek(video, t);
+    }
+  }
+
+  function switchToVideo(idx) {
+    if (currentVideoIndex === idx) return;
+
+    videoEls.forEach((v, i) => {
+      if (i === idx) {
+        v.style.zIndex = '2';
+        v.style.visibility = 'visible';
+        v.style.opacity = '1';
+      } else if (i === currentVideoIndex) {
+        v.style.zIndex = '1';
+        requestAnimationFrame(() => {
+          if (currentVideoIndex !== idx && i !== idx) {
+            v.style.opacity = '0';
+            v.style.visibility = 'hidden';
+            v.style.zIndex = '0';
+          }
+        });
+      } else {
+        v.style.zIndex = '0';
+        v.style.opacity = '0';
+        v.style.visibility = 'hidden';
+      }
+    });
+
+    currentVideoIndex = idx;
+  }
+
+  function hideAll() {
+    videoEls.forEach(v => {
       v.style.opacity = '0';
       v.style.visibility = 'hidden';
       v.style.zIndex = '0';
-     }
     });
-   } else {
-    v.style.zIndex = '0';
-    v.style.opacity = '0';
-    v.style.visibility = 'hidden';
-   }
-  });
-
-  currentVideoIndex = idx;
- }
-
- function hideAll() {
-  videoEls.forEach(v => {
-   v.style.opacity = '0';
-   v.style.visibility = 'hidden';
-   v.style.zIndex = '0';
-  });
- }
-
- function preloadAdjacent(idx) {
-  videoEls.forEach((v, i) => {
-   if (i === idx || i === idx - 1 || i === idx + 1) {
-    v.preload = 'auto';
-   }
-  });
- }
-
- /* ── Blackness (background color) ───────────────────────────── */
-
- function getBlackness(position) {
-  const videoPos = position - VIDEO_START;
-  if (videoPos < 0) return 0;
-  if (!ready) return 0;
-
-  const ramp = UI_CONFIG.blacknessRamp;
-  if (videoPos < segmentStarts[1]) {
-   const segProgress = clamp(videoPos / (segmentStarts[1] || 1));
-   const currentTime = segProgress * (durations[0] || 8.0);
-   const t = clamp((currentTime - ramp.startTime) / (ramp.endTime - ramp.startTime));
-   return smooth(t);
   }
 
-  if (videoPos < totalScrollUnits) return 1;
-
-  const overrun = videoPos - totalScrollUnits;
-  return 1 - smooth(clamp(overrun / 0.5));
- }
-
- /* ── Dial State ─────────────────────────────────────────────── */
-
- function getDialState(position) {
-  const videoPos = position - VIDEO_START;
-  if (!ready || videoPos < 0 || videoPos > totalScrollUnits) {
-   return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0 };
+  function preloadAdjacent(idx) {
+    videoEls.forEach((v, i) => {
+      if (i === idx || i === idx - 1 || i === idx + 1) {
+        v.preload = 'auto';
+      }
+    });
   }
 
-  let vidIdx = 0;
-  for (let i = 0; i < VIDEOS.length; i++) {
-   if (videoPos >= segmentStarts[i] && videoPos < segmentStarts[i + 1]) {
-    vidIdx = i;
-    break;
-   }
-   if (i === VIDEOS.length - 1) vidIdx = i;
+  /* ── Blackness (Background Color) ─────────────────────────── */
+
+  function getBlackness(position) {
+    const videoPos = position - VIDEO_START;
+    if (videoPos <= 0 || !ready) return 0;
+
+    const { videoIndex, targetRatio } = getVideoTimeAndIndex(videoPos);
+
+    if (videoIndex === 0) {
+      const ramp = UI_CONFIG.blacknessRamp;
+      const t = clamp((targetRatio - ramp.fadeStartRatio) / (ramp.fadeEndRatio - ramp.fadeStartRatio));
+      return smooth(t);
+    }
+
+    if (videoPos < totalScrollUnits) return 1;
+
+    const overrun = videoPos - totalScrollUnits;
+    return 1 - smooth(clamp(overrun / 0.5));
   }
 
-  const segProgress = clamp((videoPos - segmentStarts[vidIdx]) / (segmentStarts[vidIdx + 1] - segmentStarts[vidIdx]));
-  const currentTime = segProgress * (durations[vidIdx] || 8.0);
+  /* ── Dial & Text State (hiding text/dials until step 2) ────── */
 
-  let dialVisible = 0;
-  let descVisible = 0;
-  let chapter = 1;
-
-  for (const d of UI_CONFIG.dial) {
-   if (d.video === vidIdx && currentTime >= d.startTime && currentTime <= d.endTime) {
-    const fadeIn = smooth(clamp((currentTime - d.startTime) / 0.5));
-    const fadeOut = smooth(clamp((d.endTime - currentTime) / 0.5));
-    const alpha = Math.min(fadeIn, fadeOut);
-    dialVisible = Math.max(dialVisible, alpha);
-    if (d.showDesc) descVisible = Math.max(descVisible, alpha);
-    chapter = d.chapter;
-   }
+  function getDialState(position) {
+    return { visible: false, descVisible: false, chapter: 1, dialAlpha: 0, descAlpha: 0, category: '', title: '' };
   }
 
-  return { visible: dialVisible > 0.01, descVisible: descVisible > 0.01, chapter, dialAlpha: dialVisible, descAlpha: descVisible };
- }
-
- function isScrollIndicatorHidden(position) {
-  const videoPos = position - VIDEO_START;
-  if (!ready || videoPos < 0 || videoPos > totalScrollUnits) return false;
-
-  let vidIdx = 0;
-  for (let i = 0; i < VIDEOS.length; i++) {
-   if (videoPos >= segmentStarts[i] && videoPos < segmentStarts[i + 1]) {
-    vidIdx = i;
-    break;
-   }
-   if (i === VIDEOS.length - 1) vidIdx = i;
+  function isScrollIndicatorHidden(position) {
+    const videoPos = position - VIDEO_START;
+    if (!ready || videoPos < 0 || videoPos > totalScrollUnits) return false;
+    return videoPos > 0.5;
   }
 
-  const segProgress = clamp((videoPos - segmentStarts[vidIdx]) / (segmentStarts[vidIdx + 1] - segmentStarts[vidIdx]));
-  const currentTime = segProgress * (durations[vidIdx] || 8.0);
-
-  for (const range of UI_CONFIG.scrollIndicatorHidden) {
-   if (range.video === vidIdx && currentTime >= range.startTime && currentTime <= range.endTime) {
-    return true;
-   }
-  }
-  return false;
- }
-
- function getVideoOpacity(position) {
-  if (!ready) return 0;
-  const videoPos = position - VIDEO_START;
-  if (videoPos < -0.3) return 0;
-  if (videoPos > totalScrollUnits) return 1 - smooth((videoPos - totalScrollUnits) / 0.5);
-  if (videoPos > 0.3) return 1;
-  return smooth((videoPos + 0.3) / 0.6);
- }
-
- function getVideoProgress(position) {
-  if (!ready) return 0;
-  const videoPos = position - VIDEO_START;
-  return clamp(videoPos / totalScrollUnits);
- }
-
- function getCurrentInfo(position) {
-  const videoPos = position - VIDEO_START;
-  if (!ready || videoPos < 0 || videoPos > totalScrollUnits) return null;
-
-  let vidIdx = 0;
-  for (let i = 0; i < VIDEOS.length; i++) {
-   if (videoPos >= segmentStarts[i] && videoPos < segmentStarts[i + 1]) {
-    vidIdx = i;
-    break;
-   }
-   if (i === VIDEOS.length - 1) vidIdx = i;
+  function getVideoOpacity(position) {
+    if (!ready) return 0;
+    const videoPos = position - VIDEO_START;
+    if (videoPos < -0.3) return 0;
+    if (videoPos > totalScrollUnits + 0.4) return 0;
+    if (videoPos > totalScrollUnits) {
+      return 1 - smooth((videoPos - totalScrollUnits) / 0.4);
+    }
+    return 1;
   }
 
-  const segProgress = clamp((videoPos - segmentStarts[vidIdx]) / (segmentStarts[vidIdx + 1] - segmentStarts[vidIdx]));
-  const currentTime = segProgress * (durations[vidIdx] || 8.0);
-  return { videoIndex: vidIdx, currentTime, segProgress, duration: durations[vidIdx] || 8.0 };
- }
+  function getVideoProgress(position) {
+    if (!ready) return 0;
+    const videoPos = position - VIDEO_START;
+    return clamp(videoPos / totalScrollUnits);
+  }
 
- function getDialRotation(position) {
-  const state = getDialState(position);
-  if (!state.visible) return 0;
-  const videoPos = position - VIDEO_START;
-  const normalizedProgress = clamp(videoPos / totalScrollUnits);
-  return (state.chapter - 1) + smooth(clamp((normalizedProgress - 0.05) / 0.4));
- }
+  function getCurrentInfo(position) {
+    const videoPos = position - VIDEO_START;
+    if (!ready || videoPos < 0 || videoPos > totalScrollUnits) return null;
+    const { videoIndex, targetTime, targetRatio } = getVideoTimeAndIndex(videoPos);
+    return { videoIndex, currentTime: targetTime, targetRatio, duration: durations[videoIndex] || 8.0 };
+  }
 
- return {
-  init,
-  update,
-  resize,
-  getBlackness,
-  getDialState,
-  getDialRotation,
-  isScrollIndicatorHidden,
-  getVideoOpacity,
-  getVideoProgress,
-  getCurrentInfo,
-  get totalScrollUnits() { return totalScrollUnits || 24.2; },
-  get ready() { return ready; },
-  VIDEO_START,
-  VIDEOS,
-  UI_CONFIG,
- };
+  return {
+    init,
+    update,
+    resize,
+    getBlackness,
+    getDialState,
+    isScrollIndicatorHidden,
+    getVideoOpacity,
+    getVideoProgress,
+    getCurrentInfo,
+    get totalScrollUnits() { return totalScrollUnits || 15.1; },
+    get ready() { return ready; },
+    VIDEO_START,
+    VIDEOS,
+    UI_CONFIG
+  };
 })();

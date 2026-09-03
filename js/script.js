@@ -1,6 +1,6 @@
 /* A single, reversible scene position drives background, artwork and dial.
-   Video-scrubbed version: replaces Canvas-drawn story with MP4 scroll scrubbing.
-   Atom renderer (white background) and circular menu are preserved. */
+   Video-scrubbed version (hero-v2): 10 MP4 segments tied to scroll position.
+   Circular menu and 3D card flip section preserved. */
 (() => {
 'use strict';
 if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
@@ -15,42 +15,32 @@ const videoStage=$('#video-stage');
 let toastTimer;function toast(message){const el=$('#toast-modal');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
 
 /* ── Timeline structure ─────────────────────────────────────── */
-// Atom frames: 0–6 (white background atom animation + fission)
-// Video frames: 6 – 6+videoScrollUnits (9 MP4 segments)
-// Ending frame: after videos
-// Then circular menu section
-
-const ATOM_FRAMES = VideoScrubber.VIDEO_START; // frames 0–6 are atom
-const ATOM_LENGTHS = [0.40,0.35,0.40,0.40,0.40,0.40,0.65]; // scroll lengths per atom frame
 
 const chapters=[['LIFE SCIENCE','방사선 융합기술 개발'],['EXPLORATION','양자빔 활용 과학기술'],['FUTURE ENERGY','선진 원자로 기술개발']];
 
-// SVG dial numbers (reused from original)
+// SVG dial numbers
 const ns='http://www.w3.org/2000/svg';const numbers=Array.from({length:4},(_,i)=>{const g=document.createElementNS(ns,'g'),c=document.createElementNS(ns,'circle'),t=document.createElementNS(ns,'text');c.setAttribute('r','6');c.setAttribute('stroke','currentColor');c.setAttribute('fill','none');t.setAttribute('x','16');t.setAttribute('y','29');t.setAttribute('class','dial-number');t.textContent=`0${i}.`;g.append(c,t);$('#dial-numbers').append(g);return g;});
 
-let unit=600,s=1,ox=0,oy=0,w=0,h=0,dpr=1,position=0,target=0,lastTime=0,raf=0,menuExit=0;
+let unit=500,s=1,ox=0,oy=0,w=0,h=0,dpr=1,position=0,target=0,lastTime=0,raf=0,menuExit=0;
 
-// Cumulative scroll positions (rebuilt on resize and when video data ready)
-let cumulative=[]; // [0]=start of atom frame 0 ... [ATOM_FRAMES]=start of video region ...
-let LAST=0; // total number of "frames" in the timeline
-let endingScrollStart=0; // scroll position where ending begins
+// Cumulative scroll positions
+let cumulative=[];
+let LAST=0;
+let endingScrollStart=0;
 let totalHeight=0;
 
 function rebuildTimeline(){
  const videoUnits = VideoScrubber.totalScrollUnits;
- // Atom section: 7 frames
  cumulative=[0];
- ATOM_LENGTHS.forEach(v=>cumulative.push(cumulative.at(-1)+v*unit));
- // Video section: one continuous block mapped to videoUnits
- // We create sub-frames for the video region so getPosition() works smoothly
+ // Video section: mapped to videoUnits
  const videoScrollPx = videoUnits * unit;
  cumulative.push(cumulative.at(-1) + videoScrollPx);
- // Ending frame (brief text display before menu)
- const endingLength = 0.75 * unit;
+ // Ending section: 2.0 scroll units (0.4 video fade out + 1.2 text hold/fade + 0.4 transition to white)
+ const endingLength = 2.0 * unit;
  endingScrollStart = cumulative.at(-1);
  cumulative.push(cumulative.at(-1) + endingLength);
 
- LAST = cumulative.length - 1; // index of the last segment end
+ LAST = cumulative.length - 1;
  totalHeight = cumulative.at(-1) + h;
  hero.style.height = totalHeight + 'px';
 }
@@ -58,61 +48,56 @@ function rebuildTimeline(){
 function setupSize(){
  w=innerWidth;h=innerHeight;s=Math.min(w/1920,h/1024);ox=(w-1920*s)/2;oy=(h-1024*s)/2;dpr=Math.min(devicePixelRatio||1,1.5);
  document.documentElement.style.setProperty('--s',s);
- unit=Math.max(480,h*.8);
+ unit=Math.max(420,h*.65);
  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
  rebuildTimeline();
  VideoScrubber.resize();
  layoutMenu();
 }
 
-// Map scrollY to a continuous position value
-// 0..ATOM_FRAMES = atom region
-// ATOM_FRAMES..ATOM_FRAMES+videoScrollUnits = video region
-// after that = ending
 function getPosition(y){
  y=clamp(y,0,cumulative.at(-1));
- // Atom region (frames 0-6)
- if(y<=cumulative[ATOM_FRAMES]){
-  let i=0;
-  while(i<ATOM_FRAMES-1 && y>cumulative[i+1]) i++;
-  return i+clamp((y-cumulative[i])/(cumulative[i+1]-cumulative[i]));
- }
- // Video region
- const videoStart = cumulative[ATOM_FRAMES];
- const videoEnd = cumulative[ATOM_FRAMES+1];
+ const videoStart = cumulative[0];
+ const videoEnd = cumulative[1];
  if(y<=videoEnd){
   const videoProgress = clamp((y-videoStart)/(videoEnd-videoStart));
-  return ATOM_FRAMES + videoProgress * VideoScrubber.totalScrollUnits;
+  return VideoScrubber.VIDEO_START + videoProgress * VideoScrubber.totalScrollUnits;
  }
- // Ending region
- const endStart = cumulative[ATOM_FRAMES+1];
- const endEnd = cumulative[ATOM_FRAMES+2];
+ const endStart = cumulative[1];
+ const endEnd = cumulative[2];
  const endProgress = clamp((y-endStart)/(endEnd-endStart));
- return ATOM_FRAMES + VideoScrubber.totalScrollUnits + endProgress;
+ return VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits + endProgress * 2.0;
 }
 
-function goFrame(frame){window.scrollTo({top:cumulative[Math.min(frame,ATOM_FRAMES)]||0,behavior:reduced.matches?'auto':'smooth'});}
+function goFrame(frame){window.scrollTo({top:0,behavior:reduced.matches?'auto':'smooth'});}
 function visible(el,alpha){alpha=clamp(alpha);el.style.opacity=alpha;el.style.visibility=alpha>.001?'visible':'hidden';}
 
 /* ── Video-aware blackness ─────────────────────────────────── */
 function blackness(p){
- // Atom region: white
- if(p<VideoScrubber.VIDEO_START) return 0;
- // Video region: delegate to VideoScrubber
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  if(p<=videoEnd) return VideoScrubber.getBlackness(p);
- // Ending: ramp back to white
  const overrun = p - videoEnd;
- return 1-smooth(clamp(overrun/0.75));
+ if(overrun <= 1.6) return 1.0; // Opaque solid black (#000) during video fade & text display
+ return 1 - smooth(clamp((overrun - 1.6) / 0.4)); // Smooth transition to white
 }
 
 /* ── Dial & Text (video-aware) ─────────────────────────────── */
 function drawDialVideo(p){
- // Supplied MP4s already include chapter numbers AND captions.
- // Do not overlay a second dial or caption on the baked-in artwork.
- visible(dial, 0);
- visible(desc, 0);
- desc.inert = true;
+ const state = VideoScrubber.getDialState(p);
+ if(state && state.visible){
+  $('#dial-category').textContent = state.category || '';
+  $('#dial-title').textContent = state.title || '';
+  visible(desc, state.descAlpha);
+  desc.inert = state.descAlpha < 0.5;
+  numbers.forEach((g, i) => {
+   g.classList.toggle('is-active', i + 1 === state.chapter);
+  });
+  visible(dial, state.dialAlpha);
+ } else {
+  visible(dial, 0);
+  visible(desc, 0);
+  desc.inert = true;
+ }
 }
 
 /* ── Main render loop ──────────────────────────────────────── */
@@ -120,75 +105,71 @@ function render(now){
  raf=0;if(document.hidden)return;
  const dt=lastTime?Math.min(64,now-lastTime):16;lastTime=now;
  target=getPosition(scrollY);
- position=reduced.matches?target:mix(position,target,1-Math.exp(-dt/95));
+ position=reduced.matches?target:mix(position,target,1-Math.exp(-dt/60));
  if(Math.abs(position-target)<.0001)position=target;
  const t=reduced.matches?0:now/1000;
 
  const black=blackness(position);
- // Background color
  bg.style.backgroundColor=`rgb(${Math.round(255*(1-black))},${Math.round(255*(1-black))},${Math.round(255*(1-black))})`;
  document.body.classList.toggle('theme-dark',black>.53);
  document.body.classList.toggle('theme-light',black<=.53);
 
- const isInVideoRegion = position >= VideoScrubber.VIDEO_START && position < VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
- const videoOpacity = VideoScrubber.getVideoOpacity(position);
+ const isInVideoRegion = position >= VideoScrubber.VIDEO_START && position <= VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
 
- // Atom Canvas
- ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- if(position<7.15 && videoOpacity<1){
-  const atomAlpha = 1 - videoOpacity;
-  ctx.globalAlpha = atomAlpha;
-  const dx=reduced.matches?0:10*Math.sin(t*.7),dy=reduced.matches?0:12*Math.sin(t*.53);
-  AtomRenderer.draw(ctx,position,t,ox+(960+dx)*s,oy+(512+dy)*s,s,black,reduced.matches);
-  ctx.globalAlpha = 1;
- }
- // Atom canvas z-index: above video when in atom region, below when in video region
- canvas.style.zIndex = videoOpacity > 0.5 ? '0' : '2';
+ // Canvas unused in pure MP4 mode, hide canvas
+ ctx.clearRect(0,0,w,h);
+ canvas.style.zIndex = '0';
 
  // Video scrubber update
- if(isInVideoRegion || Math.abs(position-VideoScrubber.VIDEO_START)<1){
-  VideoScrubber.update(position);
- } else {
-  // Outside video region: make sure videos are hidden
-  VideoScrubber.update(position);
- }
+ VideoScrubber.update(position);
 
- // Atom text
- visible(text,1-smooth((position-.25)/.7));
- text.style.transform=`translateY(${-smooth((position-.25)/.7)*18}px)`;
+ // Initial atom text fade out
+ visible(text, 1 - smooth((position - 0.1) / 0.6));
+ text.style.transform=`translateY(${-smooth((position - 0.1) / 0.6)*18}px)`;
 
- // Dial
+ // Dial & Description
  if(isInVideoRegion){
   drawDialVideo(position);
  } else {
   visible(dial,0); visible(desc,0); desc.inert=true;
  }
 
- // Ending text
+ // Ending text (shown ONLY on solid black after video 10 is completely hidden)
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
- const endingProgress = smooth(clamp((position - videoEnd) / 0.5));
- const endingFadeOut = smooth(clamp((position - videoEnd - 0.5) / 0.25));
- visible(ending, endingProgress * (1 - endingFadeOut));
+ const overrun = position - videoEnd;
+ let endingAlpha = 0;
+ if (overrun > 0.4 && overrun <= 1.6) {
+  if (overrun <= 0.7) {
+   endingAlpha = smooth((overrun - 0.4) / 0.3); // Fade in (0.4 to 0.7)
+  } else if (overrun <= 1.3) {
+   endingAlpha = 1.0; // Fixed readable hold section (0.7 to 1.3)
+  } else {
+   endingAlpha = 1.0 - smooth((overrun - 1.3) / 0.3); // Fade out (1.3 to 1.6)
+  }
+ }
+ visible(ending, endingAlpha);
 
  // Circular menu section
  const menuTop=menu.getBoundingClientRect().top;menuExit=clamp(-menuTop/h);renderExit(menuExit);
 
  // Scroll indicator
  const indicator=$('#scroll-indicator');
- const videoScrollHidden = isInVideoRegion;
+ const videoScrollHidden = VideoScrubber.isScrollIndicatorHidden(position) || overrun > 0.1;
  const pastMenu = scrollY>menu.offsetTop+h*.7;
  indicator.style.opacity = (pastMenu || videoScrollHidden) ? '0' : '1';
  $('.scroll-text').textContent=position<.8?'스크롤하여 원자의 흐름을 따라가세요.':'스크롤';
 
- // Theme override: after hero section, force light
- if(scrollY>hero.offsetHeight-h){document.body.classList.remove('theme-dark');document.body.classList.add('theme-light');}
+ // Theme override: when scroll reaches circular menu (white background)
+ if(scrollY >= hero.offsetHeight - h - 5){
+  document.body.classList.remove('theme-dark');
+  document.body.classList.add('theme-light');
+ }
 
- // Hide atom fallback
  $('#atom-fallback').hidden=true;
 
- // Continue animation loop
  if(scrollY<hero.offsetHeight||Math.abs(position-target)>.001)raf=requestAnimationFrame(render);
 }
+
 function wake(){if(!raf)raf=requestAnimationFrame(render);}
 
 /* ── Circular Menu (unchanged from original) ───────────────── */
