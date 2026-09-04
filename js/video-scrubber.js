@@ -27,75 +27,75 @@ window.VideoScrubber = (() => {
       id: '01-atom-formation',
       src: 'assets/videos/hero-v2-scrub/01-atom-formation.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 9.6 } // Atom formation (doubled to 9.6)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 28.8 } // Atom formation (3x: 9.6 -> 28.8)
       ]
     },
     {
       id: '02-atom-to-mri',
       src: 'assets/videos/hero-v2-scrub/02-atom-to-mri.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 5.4 },   // Atom -> MRI transition (5.4)
-        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 14.784 } // MRI completed form hold (80% of 18.48 = 14.784)
+        { ratioStart: 0.0, ratioEnd: 0.65, scrollWeight: 16.2 },   // Atom -> MRI transition (3x: 5.4 -> 16.2)
+        { ratioStart: 0.65, ratioEnd: 1.0, scrollWeight: 44.352 } // MRI completed form hold (3x: 14.784 -> 44.352)
       ]
     },
     {
       id: '03-mri-to-space',
       src: 'assets/videos/hero-v2-scrub/03-mri-to-space.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },   // MRI -> Space transition (6.0)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 21.0 }   // Space completed form hold (70% of 30.0 = 21.0)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 18.0 },   // MRI -> Space transition (3x: 6.0 -> 18.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 63.0 }   // Space completed form hold (3x: 21.0 -> 63.0)
       ]
     },
     {
       id: '04-space-to-smr',
       src: 'assets/videos/hero-v2-scrub/04-space-to-smr.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 6.0 },   // Space -> SMR transition (6.0)
-        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 21.0 }   // SMR completed form hold (70% of 30.0 = 21.0)
+        { ratioStart: 0.0, ratioEnd: 0.50, scrollWeight: 18.0 },   // Space -> SMR transition (3x: 6.0 -> 18.0)
+        { ratioStart: 0.50, ratioEnd: 1.0, scrollWeight: 63.0 }   // SMR completed form hold (3x: 21.0 -> 63.0)
       ]
     },
     {
       id: '05-smr-to-head',
       src: 'assets/videos/hero-v2-scrub/05-smr-to-head.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // SMR -> Head transition (doubled to 4.8)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 14.4 }   // SMR -> Head transition (3x: 4.8 -> 14.4)
       ]
     },
     {
       id: '06-head-to-heart',
       src: 'assets/videos/hero-v2-scrub/06-head-to-heart.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Head -> Heart transition (doubled to 4.8)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 14.4 }   // Head -> Heart transition (3x: 4.8 -> 14.4)
       ]
     },
     {
       id: '07-heart-to-hand',
       src: 'assets/videos/hero-v2-scrub/07-heart-to-hand.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 5.4 }   // Heart -> Hand transition (doubled to 5.4)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 16.2 }   // Heart -> Hand transition (3x: 5.4 -> 16.2)
       ]
     },
     {
       id: '08-hands-touch',
       src: 'assets/videos/hero-v2-scrub/08-hands-touch.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 0.20, scrollWeight: 0.8 },  // Hands approach
-        { ratioStart: 0.20, ratioEnd: 0.80, scrollWeight: 3.6 }, // Touch & spark flash peak to settle (1.5x+ stretch)
-        { ratioStart: 0.80, ratioEnd: 1.00, scrollWeight: 0.8 }  // Handshake settle
+        { ratioStart: 0.0, ratioEnd: 0.20, scrollWeight: 2.4 },  // Hands approach (3x: 0.8 -> 2.4)
+        { ratioStart: 0.20, ratioEnd: 0.80, scrollWeight: 10.8 }, // Touch & spark flash peak to settle (3x: 3.6 -> 10.8)
+        { ratioStart: 0.80, ratioEnd: 1.00, scrollWeight: 2.4 }  // Handshake settle (3x: 0.8 -> 2.4)
       ]
     },
     {
       id: '09-handshake',
       src: 'assets/videos/hero-v2-scrub/09-handshake.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.6 }   // Handshake (3.6)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 10.8 }   // Handshake (3x: 3.6 -> 10.8)
       ]
     },
     {
       id: '10-energy-transfer',
       src: 'assets/videos/hero-v2-scrub/10-energy-transfer.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.8 }   // Energy transfer & final absorption (4.8)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 14.4 }   // Energy transfer & final absorption (3x: 4.8 -> 14.4)
       ]
     }
   ];
@@ -279,20 +279,20 @@ window.VideoScrubber = (() => {
 
     // Hand hold and smooth fadeout to black:
     // videoPos > totalScrollUnits:
-    // 0.0 ~ 0.3 units (0.3 screen height): Hold orange hand at last frame (opacity 1.0)
-    // 0.3 ~ 0.8 units (0.5 screen height): Fade out orange hand (opacity 1.0 -> 0.0)
-    // > 0.8 units: Video completely hidden
+    // 0.0 ~ 0.9 units (0.9 screen height): Hold orange hand at last frame (opacity 1.0)
+    // 0.9 ~ 2.4 units (1.5 screen height): Fade out orange hand (opacity 1.0 -> 0.0)
+    // > 2.4 units: Video completely hidden
     if (videoPos > totalScrollUnits) {
       const overrun = videoPos - totalScrollUnits;
-      if (overrun <= 0.8) {
+      if (overrun <= 2.4) {
         const lastIdx = videoEls.length - 1;
         ensureVideoLoaded(lastIdx, true);
         const lastDur = durations[lastIdx] || 8.0;
         seekVideo(lastIdx, Math.max(0, lastDur - 0.001));
 
         let handOpacity = 1.0;
-        if (overrun > 0.3) {
-          handOpacity = 1 - smooth((overrun - 0.3) / 0.5);
+        if (overrun > 0.9) {
+          handOpacity = 1 - smooth((overrun - 0.9) / 1.5);
         }
 
         container.style.opacity = String(handOpacity);
@@ -587,16 +587,16 @@ window.VideoScrubber = (() => {
   function isScrollIndicatorHidden(position) {
     const videoPos = position - VIDEO_START;
     if (!ready || videoPos < 0 || videoPos > totalScrollUnits) return false;
-    return videoPos > 0.5;
+    return videoPos > 1.5;
   }
 
   function getVideoOpacity(position) {
     if (!ready) return 0;
     const videoPos = position - VIDEO_START;
-    if (videoPos < -0.3) return 0;
-    if (videoPos > totalScrollUnits + 0.4) return 0;
+    if (videoPos < -0.9) return 0;
+    if (videoPos > totalScrollUnits + 2.4) return 0;
     if (videoPos > totalScrollUnits) {
-      return 1 - smooth((videoPos - totalScrollUnits) / 0.4);
+      return 1 - smooth((videoPos - totalScrollUnits) / 2.4);
     }
     return 1;
   }
