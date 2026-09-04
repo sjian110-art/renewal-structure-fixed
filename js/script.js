@@ -955,6 +955,13 @@ renderEntrance(0);
 setupSize();position=target=getPosition(scrollY);wake();
 initCustomCursor();
 
+const footerTopBtn = $('#footer-top-btn');
+if (footerTopBtn) {
+  footerTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduced.matches ? 'auto' : 'smooth' });
+  });
+}
+
 // Re-sync timeline once video metadata is loaded (durations may differ from defaults)
 const checkVideoReady = setInterval(()=>{
  if(VideoScrubber.ready){
