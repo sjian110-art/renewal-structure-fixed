@@ -962,6 +962,18 @@ if (footerTopBtn) {
   });
 }
 
+if (quickMenuBtn) {
+  quickMenuBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (typeof deselect === 'function') deselect();
+    const targetY = cumulative[1] + 2.85 * unit;
+    window.scrollTo({
+      top: Math.round(targetY),
+      behavior: reduced.matches ? 'auto' : 'smooth'
+    });
+  });
+}
+
 // Re-sync timeline once video metadata is loaded (durations may differ from defaults)
 const checkVideoReady = setInterval(()=>{
  if(VideoScrubber.ready){
