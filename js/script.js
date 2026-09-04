@@ -965,11 +965,39 @@ if (footerTopBtn) {
 if (quickMenuBtn) {
   quickMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (typeof deselect === 'function') deselect();
-    const targetY = cumulative[1] + 2.85 * unit;
+
+    const targetY = Math.round(cumulative[1] + 2.85 * unit);
+
+    const htmlStyle = document.documentElement.style;
+    const prevScrollBehavior = htmlStyle.scrollBehavior;
+    htmlStyle.scrollBehavior = 'auto';
+
+    target = getPosition(targetY);
+    position = target;
+
     window.scrollTo({
-      top: Math.round(targetY),
-      behavior: reduced.matches ? 'auto' : 'smooth'
+      top: targetY,
+      behavior: 'auto'
+    });
+
+    render(performance.now());
+
+    requestAnimationFrame(() => {
+      if (typeof ScrollTrigger !== 'undefined' && ScrollTrigger.update) {
+        ScrollTrigger.update();
+      }
+      position = target = getPosition(window.scrollY);
+      render(performance.now());
+      htmlStyle.scrollBehavior = prevScrollBehavior;
+
+      requestAnimationFrame(() => {
+        if (typeof ScrollTrigger !== 'undefined' && ScrollTrigger.update) {
+          ScrollTrigger.update();
+        }
+      });
     });
   });
 }
