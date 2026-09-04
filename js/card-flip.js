@@ -164,12 +164,12 @@
       }
     }
 
-    // Master GSAP Timeline (Total: 96.0 Units = 33600px, 18.0U / 6300px hold for all 3 screens)
+    // Master GSAP Timeline (Total: 10.6667 Units = 3733px, 3x faster than original baseline)
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: '#card-flip-section',
         start: 'top top',
-        end: '+=33600',
+        end: '+=3733',
         pin: '.card-flip-sticky-wrapper',
         scrub: 0.6,
         anticipatePin: 1
@@ -182,9 +182,9 @@
         // Label synchronization tied directly to timeline time
         const curTime = tl.time();
         let activeLabel = 'EXPERIENCE';
-        if (curTime >= 66.0) {
+        if (curTime >= 7.333) {
           activeLabel = 'ENERGY';
-        } else if (curTime >= 27.0) {
+        } else if (curTime >= 3.0) {
           activeLabel = 'RESEARCH';
         }
         if (labelEl && labelEl.textContent !== activeLabel) {
@@ -195,19 +195,19 @@
         }
 
         // Section Scroll Indicator state for Card Screens:
-        // Screen 1 hold: 0.00 <= curTime <= 18.00 -> '스크롤하여 다음 이야기'
-        // Screen 2 hold: 38.88 <= curTime <= 56.88 -> '스크롤하여 다음 이야기'
-        // Screen 3 hold: 77.76 <= curTime <= 96.00 -> '스크롤하여 아래로'
+        // Screen 1 hold: 0.00 <= curTime <= 2.00 -> '스크롤하여 다음 이야기'
+        // Screen 2 hold: 4.32 <= curTime <= 6.32 -> '스크롤하여 다음 이야기'
+        // Screen 3 hold: 8.64 <= curTime <= 10.6667 -> '스크롤하여 아래로'
         // Flipping transitions: hidden
         let cardIndicatorVisible = false;
         let cardIndicatorText = '';
-        if (curTime >= 0 && curTime <= 18.00) {
+        if (curTime >= 0 && curTime <= 2.00) {
           cardIndicatorVisible = true;
           cardIndicatorText = '스크롤하여 다음 이야기';
-        } else if (curTime >= 38.88 && curTime <= 56.88) {
+        } else if (curTime >= 4.32 && curTime <= 6.32) {
           cardIndicatorVisible = true;
           cardIndicatorText = '스크롤하여 다음 이야기';
-        } else if (curTime >= 77.76 && curTime <= 96.00) {
+        } else if (curTime >= 8.64 && curTime <= 10.6667) {
           cardIndicatorVisible = true;
           cardIndicatorText = '스크롤하여 아래로';
         } else {
@@ -226,16 +226,16 @@
       }
     });
 
-    // ── Timeline Keyframes (Total: 96.0 Units, 6300px reading hold for all 3 screens) ──
-    // Screen 1 (EXPERIENCE) reading hold: 0.00 ~ 18.00 (18.00 Units = 6300px)
+    // ── Timeline Keyframes (Total: 10.6667 Units, 700px reading hold for all 3 screens) ──
+    // Screen 1 (EXPERIENCE) reading hold: 0.00 ~ 2.00 (2.00 Units = 700px)
 
     // Transition 1 (Screen 1 -> Screen 2): Cards flip 0 -> 180 (pause) -> 360
     for (let i = 0; i < 6; i++) {
-      const startTime = 18.00 + i * 2.16;
+      const startTime = 2.00 + i * 0.24;
       const cardTl = gsap.timeline();
-      cardTl.to(cardStates[i], { rotation: 180, duration: 4.32, ease: 'power1.in' })
-            .to(cardStates[i], { rotation: 180, duration: 1.44 }) // readable pause at common back face
-            .to(cardStates[i], { rotation: 360, duration: 4.32, ease: 'power1.out' });
+      cardTl.to(cardStates[i], { rotation: 180, duration: 0.48, ease: 'power1.in' })
+            .to(cardStates[i], { rotation: 180, duration: 0.16 }) // readable pause at common back face
+            .to(cardStates[i], { rotation: 360, duration: 0.48, ease: 'power1.out' });
       tl.add(cardTl, startTime);
     }
 
@@ -243,30 +243,30 @@
 
     // Label Fade 1 (EXPERIENCE -> RESEARCH)
     if (fadeTarget) {
-      tl.to(fadeTarget, { opacity: 0, duration: 2.4, ease: 'power1.in' }, 25.5)
-        .to(fadeTarget, { opacity: 1, duration: 2.4, ease: 'power1.out' }, 28.8);
+      tl.to(fadeTarget, { opacity: 0, duration: 0.2667, ease: 'power1.in' }, 2.833)
+        .to(fadeTarget, { opacity: 1, duration: 0.2667, ease: 'power1.out' }, 3.2);
     }
 
-    // Screen 2 (RESEARCH) reading hold: 38.88 ~ 56.88 (18.00 Units = 6300px)
+    // Screen 2 (RESEARCH) reading hold: 4.32 ~ 6.32 (2.00 Units = 700px)
 
     // Transition 2 (Screen 2 -> Screen 3): Cards flip 360 -> 540 (pause) -> 720
     for (let i = 0; i < 6; i++) {
-      const startTime = 56.88 + i * 2.16;
+      const startTime = 6.32 + i * 0.24;
       const cardTl = gsap.timeline();
-      cardTl.to(cardStates[i], { rotation: 540, duration: 4.32, ease: 'power1.in' })
-            .to(cardStates[i], { rotation: 540, duration: 1.44 }) // readable pause at common back face
-            .to(cardStates[i], { rotation: 720, duration: 4.32, ease: 'power1.out' });
+      cardTl.to(cardStates[i], { rotation: 540, duration: 0.48, ease: 'power1.in' })
+            .to(cardStates[i], { rotation: 540, duration: 0.16 }) // readable pause at common back face
+            .to(cardStates[i], { rotation: 720, duration: 0.48, ease: 'power1.out' });
       tl.add(cardTl, startTime);
     }
 
     // Label Fade 2 (RESEARCH -> ENERGY)
     if (fadeTarget) {
-      tl.to(fadeTarget, { opacity: 0, duration: 2.4, ease: 'power1.in' }, 64.5)
-        .to(fadeTarget, { opacity: 1, duration: 2.4, ease: 'power1.out' }, 67.8);
+      tl.to(fadeTarget, { opacity: 0, duration: 0.2667, ease: 'power1.in' }, 7.1667)
+        .to(fadeTarget, { opacity: 1, duration: 0.2667, ease: 'power1.out' }, 7.533);
     }
 
-    // Screen 3 (ENERGY) reading hold: 77.76 ~ 96.00 (18.24 Units = 6384px)
-    tl.to({}, { duration: 18.24 }, 77.76);
+    // Screen 3 (ENERGY) reading hold: 8.64 ~ 10.6667 (2.0267 Units = 709px)
+    tl.to({}, { duration: 2.0267 }, 8.64);
 
     // Initial render pass
     for (let i = 0; i < 6; i++) {

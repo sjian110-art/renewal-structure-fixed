@@ -69,7 +69,7 @@ let cumulative=[];
 let LAST=0;
 let endingScrollStart=0;
 let totalHeight=0;
-const ENDING_UNITS = 50.649; // 3x: 2.4 video fade + 0.75 text in + 18.0 text hold + 0.9 text out + 4.5 organic bloom & sequential entrance + 15.999 circle hold + 9.0 sequential circle exit
+const ENDING_UNITS = 5.6277; // 3x fast (1/3 of 16.883): 0.2667 video fade + 0.0833 text in + 2.0 text hold + 0.1 text out + 0.5 organic bloom & sequential entrance + 1.7777 circle hold + 1.0 sequential circle exit
 
 function rebuildTimeline(){
  const videoUnits = VideoScrubber.totalScrollUnits;
@@ -119,8 +119,8 @@ function blackness(p){
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  if(p<=videoEnd) return VideoScrubber.getBlackness(p);
  const overrun = p - videoEnd;
- if(overrun <= 21.15) return 1.0; // Opaque solid black (#000) during hand hold, video fade & text hold (3x: 7.05 -> 21.15)
- return 1 - smooth(clamp((overrun - 21.15) / 4.5)); // 3x: (overrun - 21.15) / 4.5
+ if(overrun <= 2.35) return 1.0; // Opaque solid black (#000) during hand hold, video fade & text hold (1/3 of 7.05)
+ return 1 - smooth(clamp((overrun - 2.35) / 0.5)); // 1/3 of 1.5
 }
 
 function getOrganicBloomBackground(t) {
@@ -244,12 +244,12 @@ function render(now){
  const videoEnd = VideoScrubber.VIDEO_START + VideoScrubber.totalScrollUnits;
  const overrun = position - videoEnd;
 
- if (overrun > 21.15 && overrun < 25.65) {
-  const gradT = clamp((overrun - 21.15) / 4.5);
+ if (overrun > 2.35 && overrun < 2.85) {
+  const gradT = clamp((overrun - 2.35) / 0.5);
   bg.style.background = getOrganicBloomBackground(gradT);
   document.body.classList.toggle('theme-dark', gradT <= 0.65);
   document.body.classList.toggle('theme-light', gradT > 0.65);
- } else if (overrun >= 25.65) {
+ } else if (overrun >= 2.85) {
   bg.style.background = 'rgb(255,255,255)';
   document.body.classList.remove('theme-dark');
   document.body.classList.add('theme-light');
@@ -271,11 +271,11 @@ function render(now){
 
  // Idle Atom Breathing & Smooth Video Hand-off
  if (atomIdleStage) {
-  if (position <= 0.15) {
+  if (position <= 0.0167) {
    visible(atomIdleStage, 1.0);
    atomIdleStage.classList.remove('is-paused');
-  } else if (position <= 1.35) {
-   const idleAlpha = 1 - smooth((position - 0.15) / 1.20);
+  } else if (position <= 0.15) {
+   const idleAlpha = 1 - smooth((position - 0.0167) / 0.1333);
    visible(atomIdleStage, idleAlpha);
    atomIdleStage.classList.remove('is-paused');
   } else {
@@ -285,8 +285,8 @@ function render(now){
  }
 
  // Initial atom text fade out
- visible(text, 1 - smooth((position - 0.3) / 1.8));
- text.style.transform=`translateY(${-smooth((position - 0.3) / 1.8)*18}px)`;
+ visible(text, 1 - smooth((position - 0.0333) / 0.2));
+ text.style.transform=`translateY(${-smooth((position - 0.0333) / 0.2)*18}px)`;
 
  // Dial & Description
  if(isInVideoRegion){
@@ -298,9 +298,9 @@ function render(now){
  // Quick menu jump button (visible ONLY during black video segments, hidden on white atom & ending text)
  if(quickMenuBtn){
   let qAlpha = 0;
-  if(position >= 27.0 && overrun <= 0.9){
-   if(position < 28.8) qAlpha = smooth((position - 27.0) / 1.8);
-   else if(overrun > 0.15) qAlpha = 1 - smooth((overrun - 0.15) / 0.75);
+  if(position >= 3.0 && overrun <= 0.1){
+   if(position < 3.2) qAlpha = smooth((position - 3.0) / 0.2);
+   else if(overrun > 0.0167) qAlpha = 1 - smooth((overrun - 0.0167) / 0.0833);
    else qAlpha = 1.0;
   }
   visible(quickMenuBtn, qAlpha);
@@ -308,39 +308,39 @@ function render(now){
  }
 
  // Ending text (#story-ending):
- // 1. Hand hold: overrun 0.0 ~ 0.9
- // 2. Hand fadeout to black: overrun 0.9 ~ 2.4
- // 3. Text entrance on solid black: overrun 2.4 ~ 3.15 (0.75 units, opacity 0->1, translateY 8px->0px)
- // 4. Text hold: overrun 3.15 ~ 21.15 (18.0 units fixed readable hold)
- // 5. Text fadeout: overrun 21.15 ~ 22.05 (0.9 units)
+ // 1. Hand hold: overrun 0.0 ~ 0.1
+ // 2. Hand fadeout to black: overrun 0.1 ~ 0.2667
+ // 3. Text entrance on solid black: overrun 0.2667 ~ 0.35 (0.0833 units)
+ // 4. Text hold: overrun 0.35 ~ 2.35 (2.0 units fixed readable hold)
+ // 5. Text fadeout: overrun 2.35 ~ 2.45 (0.1 units)
  let endingAlpha = 0;
  let endingY = 0;
- if (overrun > 2.4 && overrun <= 22.05) {
-  if (overrun <= 3.15) {
-   const progress = smooth((overrun - 2.4) / 0.75);
+ if (overrun > 0.2667 && overrun <= 2.45) {
+  if (overrun <= 0.35) {
+   const progress = smooth((overrun - 0.2667) / 0.0833);
    endingAlpha = progress;
    endingY = (1 - progress) * 8;
-  } else if (overrun <= 21.15) {
+  } else if (overrun <= 2.35) {
    endingAlpha = 1.0;
    endingY = 0;
   } else {
-   endingAlpha = 1.0 - smooth((overrun - 21.15) / 0.9);
+   endingAlpha = 1.0 - smooth((overrun - 2.35) / 0.1);
    endingY = 0;
   }
  }
  visible(ending, endingAlpha);
  if (ending) ending.style.transform = `translate(-50%, calc(-50% + ${endingY}px))`;
 
- // Unified Circular menu: 1. Strict white-region mask, 2. Stagger entrance (4.5u), 3. Hold (15.999u), 4. Sequential exit (9.0u)
- if (overrun < 21.15) {
+ // Unified Circular menu: 1. Strict white-region mask, 2. Stagger entrance (0.5u), 3. Hold (1.7777u), 4. Sequential exit (1.0u)
+ if (overrun < 2.35) {
   visible(stage, 0);
   stage.style.pointerEvents = 'none';
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
   renderEntrance(0);
- } else if (overrun < 25.65) {
-  // Entrance with dynamic organic bloom mask tied to rising white ink seepage (4.5 units)
-  const entranceProgress = clamp((overrun - 21.15) / 4.5);
+ } else if (overrun < 2.85) {
+  // Entrance with dynamic organic bloom mask tied to rising white ink seepage (0.5 units)
+  const entranceProgress = clamp((overrun - 2.35) / 0.5);
   visible(stage, 1);
   stage.style.pointerEvents = 'auto';
 
@@ -350,16 +350,16 @@ function render(now){
   stage.style.webkitMaskImage = maskRule;
 
   renderEntrance(entranceProgress);
- } else if (overrun <= 41.649) {
-  // PERFECT PINNED HOLD (15.999 units): all circles fully landed, mask removed
+ } else if (overrun <= 4.6277) {
+  // PINNED HOLD (1.7777 units): all circles fully landed, mask removed
   visible(stage, 1);
   stage.style.pointerEvents = 'auto';
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
   renderEntrance(1.0);
  } else {
-  // Sequential top-to-bottom exit over dedicated 9.0 scroll units
-  const exitProgress = clamp((overrun - 41.649) / 9.0);
+  // Sequential top-to-bottom exit over dedicated 1.0 scroll units
+  const exitProgress = clamp((overrun - 4.6277) / 1.0);
   visible(stage, 1);
   stage.style.maskImage = 'none';
   stage.style.webkitMaskImage = 'none';
@@ -704,23 +704,23 @@ function updateScrollIndicator() {
       // ③ Transition between atoms, or hands touch & absorption: hidden
       isVisible = false;
     }
-  } else if (overrun <= 2.4) {
+  } else if (overrun <= 0.2667) {
     // ③ Hand hold & fadeout: hidden
     isVisible = false;
-  } else if (overrun > 3.15 && overrun <= 21.15) {
+  } else if (overrun > 0.35 && overrun <= 2.35) {
     // ④ Ending text (#story-ending) hold section: arrow only!
     isVisible = true;
     text = '';
     showText = false;
-  } else if (overrun > 21.15 && overrun < 25.65) {
+  } else if (overrun > 2.35 && overrun < 2.85) {
     // Ink bloom & menu entrance: hidden
     isVisible = false;
-  } else if (overrun >= 25.65 && overrun <= 41.649) {
+  } else if (overrun >= 2.85 && overrun <= 4.6277) {
     // ⑤ Circular menu hold section
     isVisible = true;
     text = '스크롤하여 연구 이야기 더 보기';
   } else {
-    // Menu exit transition (overrun > 41.649): hidden
+    // Menu exit transition (overrun > 4.6277): hidden
     isVisible = false;
   }
 
@@ -814,19 +814,19 @@ function initCustomCursor() {
         return blackness > 0.45;
       }
 
-      // 2. Black ending text region (overrun 0.0 ~ 21.15)
-      if (overrun <= 21.15) {
+      // 2. Black ending text region (overrun 0.0 ~ 2.35)
+      if (overrun <= 2.35) {
         return true;
       }
 
-      // 3. Organic ink bloom region (overrun 21.15 ~ 25.65)
-      if (overrun < 25.65) {
-        const t = clamp((overrun - 21.15) / 4.5);
+      // 3. Organic ink bloom region (overrun 2.35 ~ 2.85)
+      if (overrun < 2.85) {
+        const t = clamp((overrun - 2.35) / 0.5);
         const inWhiteBloom = isInsideInkBloom(mx, my, t);
         return !inWhiteBloom;
       }
 
-      // 4. Circular menu stage (overrun >= 25.65)
+      // 4. Circular menu stage (overrun >= 2.85)
       return false;
     } else {
       // 5. Card flip & Footer
