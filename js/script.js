@@ -267,7 +267,7 @@ function render(now){
  canvas.style.zIndex = '0';
 
  // Video scrubber update
- VideoScrubber.update(position);
+ VideoScrubber.update(position, dt);
 
  // Idle Atom Breathing & Smooth Video Hand-off
  if (atomIdleStage) {
@@ -298,8 +298,8 @@ function render(now){
  // Quick menu jump button (visible ONLY during black video segments, hidden on white atom & ending text)
  if(quickMenuBtn){
   let qAlpha = 0;
-  if(position >= 3.0 && overrun <= 0.1){
-   if(position < 3.2) qAlpha = smooth((position - 3.0) / 0.2);
+  if(position >= 3.9 && overrun <= 0.1){
+   if(position < 4.16) qAlpha = smooth((position - 3.9) / 0.26);
    else if(overrun > 0.0167) qAlpha = 1 - smooth((overrun - 0.0167) / 0.0833);
    else qAlpha = 1.0;
   }

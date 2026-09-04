@@ -27,7 +27,7 @@ window.VideoScrubber = (() => {
       id: '01-atom-formation',
       src: 'assets/videos/hero-v2-scrub/01-atom-formation.mp4.mp4',
       subSegments: [
-        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 3.2 } // Atom formation (1/3 of 9.6)
+        { ratioStart: 0.0, ratioEnd: 1.0, scrollWeight: 4.16 } // Atom formation (1.3x of 3.2 = 4.16)
       ]
     },
     {
@@ -124,6 +124,7 @@ window.VideoScrubber = (() => {
   let seekTarget = -1;
   let seekVideoIdx = -1;
   let pendingSeekTime = -1;
+  let displayTime0 = 0;
 
   const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
   const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
@@ -272,7 +273,7 @@ window.VideoScrubber = (() => {
 
   /* ── Update Loop (called on render frame) ─────────────────── */
 
-  function update(position) {
+  function update(position, dt) {
     if (!ready || !container) return;
 
     const videoPos = position - VIDEO_START;
@@ -333,14 +334,30 @@ window.VideoScrubber = (() => {
 
     const { videoIndex, targetTime, targetRatio } = getVideoTimeAndIndex(videoPos);
 
+    // Smooth lerp frame scrubbing interpolation for Video 1 (01-atom-formation)
+    let effectiveTime = targetTime;
+    if (videoIndex === 0) {
+      if (position <= 0.001) {
+        displayTime0 = 0;
+      } else {
+        const frameDt = Math.min(64, dt || 16);
+        // Exponential smoothing with response time tau = 180ms (settles within ~0.25s)
+        displayTime0 += (targetTime - displayTime0) * (1 - Math.exp(-frameDt / 180));
+        if (Math.abs(displayTime0 - targetTime) < 0.0005) {
+          displayTime0 = targetTime;
+        }
+      }
+      effectiveTime = displayTime0;
+    }
+
     // Ensure active video is loaded with high priority
     ensureVideoLoaded(videoIndex, true);
 
     // Seek active video
-    seekVideo(videoIndex, targetTime);
+    seekVideo(videoIndex, effectiveTime);
 
     // Render active videos with dual-buffer blending on specific boundary transitions (1->2, 2->3)
-    renderActiveVideos(videoIndex, targetRatio, targetTime);
+    renderActiveVideos(videoIndex, targetRatio, effectiveTime);
 
     preloadAdjacent(videoIndex, targetRatio);
   }
