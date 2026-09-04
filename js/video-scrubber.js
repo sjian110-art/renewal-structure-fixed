@@ -124,7 +124,7 @@ window.VideoScrubber = (() => {
   let seekTarget = -1;
   let seekVideoIdx = -1;
   let pendingSeekTime = -1;
-  let displayTime0 = 0;
+  const displayTimes = [0, 0, 0, 0];
 
   const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
   const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
@@ -156,6 +156,43 @@ window.VideoScrubber = (() => {
     totalScrollUnits = currentScroll;
   }
 
+  function mapProgressToRatio(videoIndex, subIndex, rawProgress, sub) {
+    const p = clamp(rawProgress);
+    if (videoIndex === 0) { // 01-atom-formation: focus time resolution on particle fission & orbital assembly
+      if (p <= 0.15) {
+        const t = p / 0.15;
+        return 0.08 * (t * t);
+      } else if (p <= 0.85) {
+        const t = (p - 0.15) / 0.70;
+        return 0.08 + 0.84 * (t * t * (3 - 2 * t));
+      } else {
+        const t = (p - 0.85) / 0.15;
+        return 0.92 + 0.08 * (1 - (1 - t) * (1 - t));
+      }
+    }
+    if (videoIndex === 1 && subIndex === 0) { // 02-atom-to-mri: dissolve into mint beam structural assembly
+      if (p <= 0.10) {
+        const t = p / 0.10;
+        return 0.05 * (t * t);
+      } else if (p <= 0.80) {
+        const t = (p - 0.10) / 0.70;
+        return 0.05 + 0.55 * (t * t * (3 - 2 * t));
+      } else {
+        const t = (p - 0.80) / 0.20;
+        return 0.60 + 0.05 * (1 - (1 - t) * (1 - t));
+      }
+    }
+    if (videoIndex === 2 && subIndex === 0) { // 03-mri-to-space: MRI expansion to star field
+      const mapped = p * p * (3 - 2 * p);
+      return sub.ratioStart + mapped * (sub.ratioEnd - sub.ratioStart);
+    }
+    if (videoIndex === 3 && subIndex === 0) { // 04-space-to-smr: Star field collection into SMR vessel
+      const mapped = p * p * (3 - 2 * p);
+      return sub.ratioStart + mapped * (sub.ratioEnd - sub.ratioStart);
+    }
+    return sub.ratioStart + p * (sub.ratioEnd - sub.ratioStart);
+  }
+
   function getVideoTimeAndIndex(videoPos) {
     const clampedPos = clamp(videoPos, 0, totalScrollUnits);
 
@@ -170,8 +207,8 @@ window.VideoScrubber = (() => {
     }
 
     const segLen = Math.max(0.001, sub.scrollEnd - sub.scrollStart);
-    const progress = clamp((clampedPos - sub.scrollStart) / segLen);
-    const targetRatio = sub.ratioStart + progress * (sub.ratioEnd - sub.ratioStart);
+    const rawProgress = clamp((clampedPos - sub.scrollStart) / segLen);
+    const targetRatio = mapProgressToRatio(sub.videoIndex, sub.subIndex, rawProgress, sub);
     const vidDur = durations[sub.videoIndex] || 8.0;
     const targetTime = targetRatio * vidDur;
 
@@ -334,20 +371,19 @@ window.VideoScrubber = (() => {
 
     const { videoIndex, targetTime, targetRatio } = getVideoTimeAndIndex(videoPos);
 
-    // Smooth lerp frame scrubbing interpolation for Video 1 (01-atom-formation)
+    // High-performance smooth frame scrubbing lerp interpolation for Videos 0 ~ 3 (tau = 110ms, settles in <= 0.15s)
     let effectiveTime = targetTime;
-    if (videoIndex === 0) {
-      if (position <= 0.001) {
-        displayTime0 = 0;
+    if (videoIndex >= 0 && videoIndex <= 3) {
+      if (position <= 0.001 && videoIndex === 0) {
+        displayTimes[0] = 0;
       } else {
         const frameDt = Math.min(64, dt || 16);
-        // Exponential smoothing with response time tau = 180ms (settles within ~0.25s)
-        displayTime0 += (targetTime - displayTime0) * (1 - Math.exp(-frameDt / 180));
-        if (Math.abs(displayTime0 - targetTime) < 0.0005) {
-          displayTime0 = targetTime;
+        displayTimes[videoIndex] += (targetTime - displayTimes[videoIndex]) * (1 - Math.exp(-frameDt / 110));
+        if (Math.abs(displayTimes[videoIndex] - targetTime) < 0.0003) {
+          displayTimes[videoIndex] = targetTime;
         }
       }
-      effectiveTime = displayTime0;
+      effectiveTime = displayTimes[videoIndex];
     }
 
     // Ensure active video is loaded with high priority
@@ -385,13 +421,34 @@ window.VideoScrubber = (() => {
   }
 
   function renderActiveVideos(videoIndex, targetRatio, targetTime) {
+    // Boundary transition 0: 01-atom-formation (idx 0) -> 02-atom-to-mri (idx 1)
+    const isBoundary0 = (videoIndex === 1 && targetRatio < 0.06);
     // Boundary transition 1: 02-atom-to-mri (idx 1) -> 03-mri-to-space (idx 2)
     const isBoundary1 = (videoIndex === 2 && targetRatio < 0.06);
     // Boundary transition 2: 03-mri-to-space (idx 2) -> 04-space-to-smr (idx 3)
     const isBoundary2 = (videoIndex === 3 && targetRatio < 0.06);
 
     videoEls.forEach((v, i) => {
-      if (isBoundary1) {
+      if (isBoundary0) {
+        if (i === 1) {
+          const blend = smooth(targetRatio / 0.06);
+          v.style.zIndex = '2';
+          v.style.visibility = 'visible';
+          v.style.opacity = String(blend);
+        } else if (i === 0) {
+          // Keep atom video showing its clean end frame underneath
+          ensureVideoLoaded(0, true);
+          const prevDur = durations[0] || 8.0;
+          seekVideo(0, prevDur - 0.01);
+          v.style.zIndex = '1';
+          v.style.visibility = 'visible';
+          v.style.opacity = '1';
+        } else {
+          v.style.zIndex = '0';
+          v.style.visibility = 'hidden';
+          v.style.opacity = '0';
+        }
+      } else if (isBoundary1) {
         if (i === 2) {
           const blend = smooth(targetRatio / 0.06);
           v.style.zIndex = '2';
