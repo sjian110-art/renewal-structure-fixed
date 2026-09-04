@@ -251,6 +251,8 @@ function render(now){
   document.body.classList.toggle('theme-light', gradT > 0.65);
  } else if (overrun >= 2.85) {
   bg.style.background = 'rgb(255,255,255)';
+  bg.style.maskImage = 'none';
+  bg.style.webkitMaskImage = 'none';
   document.body.classList.remove('theme-dark');
   document.body.classList.add('theme-light');
  } else {
@@ -969,7 +971,8 @@ if (quickMenuBtn) {
 
     if (typeof deselect === 'function') deselect();
 
-    const targetY = Math.round(cumulative[1] + 2.85 * unit);
+    // Target overrun 2.90 ensures being safely inside hold section (2.85 ~ 4.6277) without subpixel rounding issues
+    const targetY = Math.round(cumulative[1] + 2.90 * unit);
 
     const htmlStyle = document.documentElement.style;
     const prevScrollBehavior = htmlStyle.scrollBehavior;
@@ -978,19 +981,42 @@ if (quickMenuBtn) {
     target = getPosition(targetY);
     position = target;
 
+    // 1. Move scroll position immediately
     window.scrollTo({
       top: targetY,
       behavior: 'auto'
     });
 
+    // 2. Clear any lingering transition masks on stage & background
+    stage.style.maskImage = 'none';
+    stage.style.webkitMaskImage = 'none';
+    bg.style.maskImage = 'none';
+    bg.style.webkitMaskImage = 'none';
+
+    // 3. Update ScrollTrigger
+    if (typeof ScrollTrigger !== 'undefined' && ScrollTrigger.update) {
+      ScrollTrigger.update();
+    }
+
+    // 4. Force synchronous render pass before browser paint
     render(performance.now());
 
+    // 5. Sync progress & re-confirm on next rAF
     requestAnimationFrame(() => {
+      position = target = getPosition(window.scrollY);
+      stage.style.maskImage = 'none';
+      stage.style.webkitMaskImage = 'none';
+      bg.style.maskImage = 'none';
+      bg.style.webkitMaskImage = 'none';
+      visible(stage, 1);
+      stage.style.pointerEvents = 'auto';
+      renderEntrance(1.0);
+      render(performance.now());
+
       if (typeof ScrollTrigger !== 'undefined' && ScrollTrigger.update) {
         ScrollTrigger.update();
       }
-      position = target = getPosition(window.scrollY);
-      render(performance.now());
+
       htmlStyle.scrollBehavior = prevScrollBehavior;
 
       requestAnimationFrame(() => {
