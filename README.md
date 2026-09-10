@@ -8,7 +8,7 @@
 
 ## Links
 * Live Site: https://sjian110-art.github.io/renewal-structure-fixed/
-* GitHub Repository: https://github.com/sjian110-art/renewal-structure-fixed.git
+* GitHub Repository: https://github.com/sjian110-art/renewal-structure-fixed
 * Project Plan: https://app.notion.com/p/Project-3-dcae67e4533883c6bac5810f7a7a5665
 * Original Website: https://www.kaeri.re.kr/
 
